@@ -1,3 +1,0 @@
-/home/qwistys/src/selfma/build/CMakeFiles/selfma.dir
-/home/qwistys/src/selfma/build/CMakeFiles/edit_cache.dir
-/home/qwistys/src/selfma/build/CMakeFiles/rebuild_cache.dir
