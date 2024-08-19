@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/selfma.dir/core/main.cpp.o -o selfma
