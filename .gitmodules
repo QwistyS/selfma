@@ -1,0 +1,3 @@
+[submodule "extern/stuff"]
+	path = extern/stuff
+	url = git@github.com:QwistyS/stuff.git
