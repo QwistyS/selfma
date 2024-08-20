@@ -7,14 +7,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCE core/main.cpp)
 set(XTRN extern)
 
-file(GLOB SELFMA_IMPL
-  core/project.cpp
-)
-
 # Include directories for core module headers
 include_directories(core/inc)
 include_directories(${XTRN}/stuff/inc)
+
+set(STUFF ${XTRN}/stuff/inc/)
 # include_directories(${XTRN}/TermOx/include)
+
+file(GLOB SELFMA_IMPL
+  core/project.cpp
+  ${STUFF}/qwistys_alloc.c
+  ${STUFF}/qwistys_avltree.c
+  
+)
+
 
 
 # add_subdirectory(extern/TermOx)
