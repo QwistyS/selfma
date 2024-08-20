@@ -1,7 +1,9 @@
-#include <cstdint>
-#include "inc/error_handler.h"
-#include "inc/task.h"
 #include "inc/project.h"
+#include <cstdio>
+#include <cstring>
+#include "error_handler.h"
+#include "qwistys_avltree.h"
+#include "task.h"
 
 static int _compare(void* t, void* t2) {
     avlt_node_t* first = (avlt_node_t*)t;
@@ -13,24 +15,36 @@ static int _compare(void* t, void* t2) {
     return task->id > task2->id;
 }
 
-void Project::_init() {
-    _root = avlt_create_node(sizeof(Task));
+static void _delet(void* p) {
+    avlt_node_t* data = (avlt_node_t*)p;
+    Task* t = (Task*)&data->user_data;
+    fprintf(stderr, "Deleting task id = %d\n", t->id);
 }
 
-VoidResult Project::del_task(uint32_t id) {
-    QWISTYS_TODO_MSG("del_task implemntation");
+void _print(void *p) {
+    Task* t = (Task*)p;
+    fprintf(stderr, "Task id = %d description %s \n", t->id, t->description.c_str());
+}
+
+VoidResult Project::print() {
+    avlt_print(_root, _print);
+    return Ok();
+}
+
+void Project::_init() {
+}
+
+VoidResult Project::del_task(Task* t) {
+    avlt_delete(_root, t, _compare, _delet);
+    return Ok();
 }
 
 VoidResult Project::write_task(const Task* t) {
-    QWISTYS_TODO_MSG("write task implemntation");
+    QWISTYS_TODO_MSG("write task implemntatoon");
     return Ok();
 }
 
 VoidResult Project::push_task(Task* t) {
-    if(auto ret = write_task(t); ret.is_err() ) {
-        avlt_insert(_root, t, sizeof(Task), _compare);
-        QWISTYS_TODO_MSG("Define the errors and stuff");
-    }
-    QWISTYS_DEBUG_MSG("on push");
+    _root = avlt_insert(_root, t, sizeof(Task), _compare);
     return Ok();
 }

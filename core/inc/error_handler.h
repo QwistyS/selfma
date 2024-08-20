@@ -177,7 +177,7 @@ public:
         if (error.severity() >= Severity::HIGH) {
             recovered = drp_.execute_recovery(error);
             if (!recovered && error.severity() == Severity::CRITICAL) {
-                QWISTYS_DEBUG_MSG("BAD ERROR: {}", error.message());
+                QWISTYS_DEBUG_MSG("BAD ERROR: {}", error.message().c_str());
                 std::abort();
             }
         }
@@ -192,7 +192,7 @@ private:
 
     void log_error(const Error& error) const {
         QWISTYS_DEBUG_MSG("[ Severity: {} Error code: {} Error message: {} ]", static_cast<int>(error.severity()),
-              static_cast<int>(error.code()), error.message());
+              static_cast<int>(error.code()), error.message().c_str());
     }
 };
 

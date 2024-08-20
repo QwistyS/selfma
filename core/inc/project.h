@@ -1,18 +1,20 @@
 #ifndef SELFMA_PROJECT_H
 #define SELFMA_PROJECT_H
 
+#include <cstdint>
 #include "error_handler.h"
-#define QWISTYS_AVLT_IMPLEMENTATION
 #include "qwistys_avltree.h"
-
 #include "task.h"
 
 class Project {
     public:
+        uint32_t id;
+        std::string description;
         Project() : _error(_drp), _root(nullptr) { _init(); };
         ~Project() = default;
         VoidResult push_task(Task* t);
-        VoidResult del_task(uint32_t id);
+        VoidResult del_task(Task* t);
+        VoidResult print();
     private:
         VoidResult write_task(/*db connection, */ const Task* t);
         VoidResult read_task(/*db connection, */ Task& t);

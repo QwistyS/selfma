@@ -16,6 +16,7 @@ set(STUFF ${XTRN}/stuff/inc/)
 
 file(GLOB SELFMA_IMPL
   core/project.cpp
+  core/container.cpp
   ${STUFF}/qwistys_alloc.c
   ${STUFF}/qwistys_avltree.c
   
