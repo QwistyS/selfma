@@ -1,4 +1,5 @@
 #include "container.h"
+#include "qwistys_alloc.h"
 #include "qwistys_macros.h"
 #include "task.h"
 
@@ -29,6 +30,7 @@ int main() {
     QWISTYS_DEBUG_MSG("============================");
     conntainer.print_projects();
 
+    qwistys_print_memory_stats();
     // conntainer.add_task(1, Task* task);
     return 0;
 }

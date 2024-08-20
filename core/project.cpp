@@ -3,7 +3,6 @@
 #include <cstring>
 #include "error_handler.h"
 #include "qwistys_avltree.h"
-#include "task.h"
 
 static int _compare(void* t, void* t2) {
     avlt_node_t* first = (avlt_node_t*) t;

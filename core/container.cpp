@@ -24,8 +24,9 @@ static void _print(void* a) {
 static void _del(void* p) {
     Project* pp = (Project*) p;
     fprintf(stderr, "Freeing project id = %d\n", pp->id);
-    // TODO: add clean too Project.
+    QWISTYS_TODO_MSG("Clean each project tree befire releasing");
 }
+
 
 void Container::_clean() {
     QWISTYS_TODO_MSG("Enable contaned DTOR !!!");
