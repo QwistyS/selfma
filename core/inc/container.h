@@ -10,6 +10,7 @@
 class Container {
 public:
     Container() : _element_counter(0), _root(nullptr) {};
+    ~Container() { _clean(); };
 
     VoidResult add_project(std::string_view description);
     VoidResult print_projects();
@@ -18,6 +19,7 @@ public:
 
 private:
     Project* get_project_by_id(avlt_node_t* node, uint32_t id);
+    void _clean();
     avlt_node_t* _root;
     uint32_t _element_counter;
 };

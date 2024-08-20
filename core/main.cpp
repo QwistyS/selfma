@@ -2,7 +2,6 @@
 #include "task.h"
 
 int main() {
-    QWISTYS_DEBUG_MSG("Hello App");
     Container conntainer;
 
     conntainer.add_project("Ramen");
@@ -14,9 +13,16 @@ int main() {
     conntainer.add_task(0, &t);
     conntainer.add_task(0, &t1);
     conntainer.add_task(0, &t2);
-    conntainer.print_projects(); 
+
+    Task p1 = {0, "Make test for container class"};
+    Task p2 = {1, "Make test for project class"};
+    Task p3 = {2, "Make test for task class"};
+    conntainer.add_task(1, &p1);
+    conntainer.add_task(1, &p2);
+    conntainer.add_task(1, &p3);
+
+    conntainer.print_projects();
 
     // conntainer.add_task(1, Task* task);
     return 0;
-    
 }

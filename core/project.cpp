@@ -1,4 +1,4 @@
-#include "inc/project.h"
+#include "project.h"
 #include <cstdio>
 #include <cstring>
 #include "error_handler.h"
@@ -23,7 +23,7 @@ static void _delet(void* p) {
 
 void _print(void *p) {
     Task* t = (Task*)p;
-    fprintf(stderr, "Task id = %d description %s \n", t->id, t->description.c_str());
+    fprintf(stderr, "Task id = %d description = %s \n", t->id, t->description.c_str());
 }
 
 VoidResult Project::print() {

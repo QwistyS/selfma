@@ -1,6 +1,5 @@
 #include "container.h"
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include "error_handler.h"
 #include "project.h"
@@ -19,7 +18,16 @@ static void _print(void* a) {
     fprintf(stderr, "Project [ id = %d description = %s ] \t Task:\n", pa->id, pa->description.c_str());
     pa->print();
     fprintf(stderr, "-------------------------------------------\n");
+}
 
+static void _del(void* p) {
+    Project* pp = (Project*) p;
+    fprintf(stderr, "Freeing project id = %d\n", pp->id);
+    // TODO: add clean too Project.
+}
+
+void Container::_clean() {
+    avlt_free_tree(_root, _del);
 }
 
 VoidResult Container::add_project(std::string_view description) {
