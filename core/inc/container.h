@@ -13,8 +13,10 @@ public:
     ~Container() { _clean(); };
 
     VoidResult add_project(std::string_view description);
+    VoidResult remove_project(uint32_t project_id);
     VoidResult print_projects();
     VoidResult add_task(uint32_t project_id, Task* task);
+    VoidResult remove_task(uint32_t project_id, uint32_t task_id);
     Project* get_project(uint32_t id);
 
 private:

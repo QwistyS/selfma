@@ -6,6 +6,7 @@
 #include "qwistys_alloc.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
+#include "task.h"
 
 static int _comp(void* a, void* b) {
     Project* pa = (Project*) a;
@@ -27,7 +28,8 @@ static void _del(void* p) {
 }
 
 void Container::_clean() {
-    avlt_free_tree(_root, _del);
+    QWISTYS_TODO_MSG("Enable contaned DTOR !!!");
+    // avlt_free_tree(_root, _del);
 }
 
 VoidResult Container::add_project(std::string_view description) {
@@ -36,6 +38,28 @@ VoidResult Container::add_project(std::string_view description) {
     pproject->description = description;
 
     _root = avlt_insert(_root, pproject, sizeof(Project), _comp);
+    return Ok();
+}
+
+VoidResult Container::remove_project(uint32_t project_id) {
+    Project* delete_candidate = get_project_by_id(_root, project_id);
+
+    if (delete_candidate) {
+        avlt_delete(_root, delete_candidate, _comp, _del);
+        QWISTYS_TODO_MSG("Clea r the Task tree in project before releasing it");
+        return Ok();
+    }
+    return Ok();
+}
+
+VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
+    Project* p = get_project_by_id(_root, project_id);
+    if (p) {
+        Task* t = p->get_task(task_id);
+        if (t) {
+            p->del_task(t);
+        }
+    }
     return Ok();
 }
 
@@ -54,12 +78,12 @@ Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
     }
 
     Project* proj = (Project*) node->user_data;
-    if (proj->id > id) {
-        return get_project_by_id(node->left, id);
+    if (proj->id == id) {
+        return proj;
     } else if (proj->id < id) {
         return get_project_by_id(node->right, id);
-    } else if (proj->id == id) {
-        return proj;
+    } else if (proj->id > id) {
+        return get_project_by_id(node->left, id);
     } else {
         return NULL;
     }

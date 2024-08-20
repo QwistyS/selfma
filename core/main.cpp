@@ -1,4 +1,5 @@
 #include "container.h"
+#include "qwistys_macros.h"
 #include "task.h"
 
 int main() {
@@ -21,6 +22,11 @@ int main() {
     conntainer.add_task(1, &p2);
     conntainer.add_task(1, &p3);
 
+    conntainer.remove_task(1, 0);
+    conntainer.print_projects();
+    conntainer.remove_project(1);
+    conntainer.remove_task(0, 2);
+    QWISTYS_DEBUG_MSG("============================");
     conntainer.print_projects();
 
     // conntainer.add_task(1, Task* task);
