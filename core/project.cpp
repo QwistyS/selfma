@@ -1,9 +1,11 @@
-#include "project.h"
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include "error_handler.h"
-#include "qwistys_avltree.h"
 
+#include "project.h"
+#include "qwistys_macros.h"
+
+/** Callbacks for avl tree for Project to task */
 static int _compare(void* t, void* t2) {
     avlt_node_t* first = (avlt_node_t*) t;
     avlt_node_t* second = (avlt_node_t*) t2;
@@ -24,13 +26,30 @@ void _print(void* p) {
     Task* t = (Task*) p;
     fprintf(stderr, "Task id = %d description = %s \n", t->id, t->description.c_str());
 }
+/** End of callback's */ 
 
 VoidResult Project::print() {
     avlt_print(_root, _print);
     return Ok();
 }
 
+void Project::self_print() {
+    fprintf(stderr, "TBD PROJECT CONF PTING\n");
+}
+
 void Project::_init() {
+}
+
+void Project::_clean() {
+
+}
+
+uint32_t Project::get_size() {
+    return _cunter;
+}
+
+uint32_t Project::get_self_id() {
+    return config.id;
 }
 
 VoidResult Project::del_task(Task* t) {
@@ -41,6 +60,23 @@ VoidResult Project::del_task(Task* t) {
 
 Task* Project::get_task(uint32_t id) {
     return _get_task(_root, id);
+}
+
+std::vector<Task*> Project::task_vec() {
+    QWISTYS_TODO_MSG("That's should not be a thinkg due the bug in id indexing");
+    auto tree_len= get_size();
+    uint increment = 0;
+    std::vector<Task*> _tmp;
+    
+    while (tree_len) {
+        Task* task = get_task(increment++);
+        if (task) {
+            _tmp.push_back(task);
+            fprintf(stderr, "Task id[%d] descr[%s]\n", task->id, task->description.c_str());
+            tree_len --;
+        }
+    }
+    return _tmp;
 }
 
 Task* Project::_get_task(avlt_node_t* node, uint32_t task_id) {
@@ -60,13 +96,8 @@ Task* Project::_get_task(avlt_node_t* node, uint32_t task_id) {
     }
 }
 
-VoidResult Project::write_task(const Task* t) {
-    QWISTYS_TODO_MSG("write task implemntatoon");
-    return Ok();
-}
-
 VoidResult Project::push_task(Task* t) {
+    t->id = _cunter++;
     _root = avlt_insert(_root, t, sizeof(Task), _compare);
-    _cunter++;
     return Ok();
 }

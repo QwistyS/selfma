@@ -7,12 +7,13 @@
 #include "project.h"
 #include "qwistys_avltree.h"
 
+
 class Container {
 public:
     Container() : _element_counter(0), _root(nullptr) {};
     ~Container() { _clean(); };
 
-    VoidResult add_project(std::string_view description);
+    VoidResult add_project(std::string_view description, std::string_view name);
     VoidResult remove_project(uint32_t project_id);
     VoidResult print_projects();
     VoidResult add_task(uint32_t project_id, Task* task);
