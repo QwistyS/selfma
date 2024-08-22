@@ -25,38 +25,51 @@ file(GLOB SELFMA_IMPL
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
 
-target_link_libraries(${PROJECT_NAME}
-  unity
-)
+target_link_libraries(${PROJECT_NAME} )
 
-# Test executable
-set(TEST_SOURCES
-    test/test_project.c
-    test/runner/test_project_runner.c
-    ${SELFMA_IMPL}
-)
-
-add_executable(run_tests ${TEST_SOURCES})
-
-target_include_directories(run_tests PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/${XTRN}/Unity
-)
-
-target_link_libraries(run_tests
-    unity
-)
-
-# Ensure test files are compiled as C++
+# Ensure all test files are compiled as C++
 set_source_files_properties(
-    test/test_project.c
-    test/runner/test_project_runner.c
+    test/runner/trun_project.c
+    test/runner/trun_container.c
     PROPERTIES
     LANGUAGE CXX
 )
 
-# Add a custom target to run the tests
-add_custom_target(test
-    COMMAND run_tests
-    DEPENDS run_tests
+# Test executables
+add_executable(test_project 
+    test/runner/trun_project.c
+    test/test_project.cpp
+    ${SELFMA_IMPL}
+)
+
+add_executable(test_container
+    test/runner/trun_container.c
+    test/test_container.cpp
+    ${SELFMA_IMPL}
+)
+
+# add_executable(test_selfma
+#     test/runner/test_selfma.c
+#     test/test_selfma.c
+#     ${SELFMA_IMPL}
+# )
+
+# Set include directories for test executables
+foreach(test_target test_project test_container)
+  target_include_directories(${test_target} PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/core/inc
+      ${CMAKE_CURRENT_SOURCE_DIR}/${XTRN}/Unity
+  )
+  target_link_libraries(${test_target} unity)
+  
+  # Ensure test files are compiled as C++
+  set_target_properties(${test_target} PROPERTIES LINKER_LANGUAGE CXX)
+  set_source_files_properties(${test_target} PROPERTIES LANGUAGE CXX)
+endforeach()
+
+# Add a custom target to run all tests
+add_custom_target(run_all_tests
+    COMMAND test_project
+    COMMAND test_container
+    DEPENDS test_project test_container
 )

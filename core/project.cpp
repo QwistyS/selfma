@@ -20,7 +20,7 @@ static int _compare(void* t, void* t2) {
 static void _delet(void* p) {
     avlt_node_t* data = (avlt_node_t*) p;
     Task* t = (Task*) &data->user_data;
-    fprintf(stderr, "Deleting task id = %d\n", t->id);
+    QWISTYS_DEBUG_MSG("Clearing Task id [%d]", t->id);
 }
 
 void _print(void* p) {
@@ -42,12 +42,11 @@ void Project::_init() {
 }
 
 void Project::_clean() {
-    QWISTYS_TODO_MSG("handle RAII on Task tree");
-    // auto tasks = task_vec();
-    
-    // for (auto task : tasks) {
-    //     _root = avlt_delete(_root, task, _compare, _delet);
-    // }
+     if (_root) {
+         avlt_free_tree(_root, _delet);
+        _root = nullptr;
+    }
+    _cunter = 0;
 }
 
 uint32_t Project::get_size() {

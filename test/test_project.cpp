@@ -1,5 +1,3 @@
-#include <csignal>
-#include <cstdio>
 #include <memory>
 #include "project.h"
 #include "qwistys_macros.h"

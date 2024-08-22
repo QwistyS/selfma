@@ -1,6 +1,8 @@
 #include "container.h"
 #include <cstdint>
-#include <string_view>
+#include <memory>
+#include <string>
+#include "error_handler.h"
 #include "project.h"
 #include "qwistys_alloc.h"
 #include "qwistys_avltree.h"
@@ -21,9 +23,12 @@ static void _print(void* a) {
 }
 
 static void _del(void* p) {
-    Project* pp = (Project*) p;
-    fprintf(stderr, "Freeing project id = %d\n", pp->get_self_id());
-    QWISTYS_TODO_MSG("Clean each project tree before releasing");
+    if(!p) {
+        return;
+    }
+    Project* obj = (Project*)p;
+    QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config.id);
+    obj->_clean();
 }
 /** End of callback's */
 
@@ -46,25 +51,17 @@ std::vector<Project*> Container::project_vec() {
 }
 
 void Container::_clean() {
-    auto projects = project_vec();
-    for (auto proj : projects) {
-        proj->~Project();
-        _root = avlt_delete(_root, proj, _comp, _del);
+    if (_root) {
+        avlt_free_tree(_root, _del);
+        _root = nullptr;
     }
+    _element_counter = 0;
 }
 
-VoidResult Container::add_project(std::string_view description, std::string_view name) {
-    ProjectConf _config;
-    QWISTYS_TODO_MSG("Wrong id calculation");
-    _config.id = _element_counter++;
-    _config.description = description;
-    _config.name = name;
-    time(&_config.created_at);
-
-    Project* pproject = (Project*) qwistys_malloc(sizeof(Project), NULL);
-    pproject->config = _config;
-
-    _root = avlt_insert(_root, pproject, sizeof(Project), _comp);
+VoidResult Container::add_project(ProjectConf& config) {
+    time(&config.created_at);
+    Project p(config);
+    _root = avlt_insert(_root, &p, sizeof(Project), _comp);
     return Ok();
 }
 
@@ -119,8 +116,9 @@ Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
 
 VoidResult Container::add_task(uint32_t project_id, Task* task) {
     Project* project = get_project(project_id);
-    QWISTYS_ASSERT(project);
-
+    if(!project) {
+        return Err(ErrorCode::OK, "project Id[" + std::to_string(project_id) + "] does not exis");
+    }
     project->push_task(task);
     return Ok();
 }

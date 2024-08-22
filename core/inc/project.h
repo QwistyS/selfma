@@ -36,12 +36,12 @@ public:
     void self_print();
     // For debug ussage.
     VoidResult print();
+    void _clean();
 
 private:
     // if needed some stuff @ ctor time.
     void _init();
     // RAII Stuff
-    void _clean();
     // Get task by node id which is in this case Task structure
     Task* _get_task(avlt_node_t* node, uint32_t task_id);
     uint32_t _cunter;  // :D and yes its a mistake that would leave here forever
