@@ -1,7 +1,4 @@
 #include "unity.h"
-#include <setjmp.h>
-#include <stdio.h>
-#include "project.h"
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
@@ -23,12 +20,16 @@ void resetTest(void)
   setUp();
 }
 
-
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("test/TestProductionCode2.c");
+  UnityBegin("test/runner/test_project_runne.c");
   RUN_TEST(test_project_ctor);
+  RUN_TEST(test_project_dtor);
+  RUN_TEST(test_project_get_size);
+  RUN_TEST(test_project_task_vec);
+  RUN_TEST(test_project_del_task);
+  RUN_TEST(test_project_get_task);
 
   return (UnityEnd());
 }

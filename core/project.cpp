@@ -42,10 +42,12 @@ void Project::_init() {
 }
 
 void Project::_clean() {
-    auto tasks = task_vec();
-    for (auto task : tasks) {
-        _root = avlt_delete(_root, task, _compare, _delet);
-    }
+    QWISTYS_TODO_MSG("handle RAII on Task tree");
+    // auto tasks = task_vec();
+    
+    // for (auto task : tasks) {
+    //     _root = avlt_delete(_root, task, _compare, _delet);
+    // }
 }
 
 uint32_t Project::get_size() {
