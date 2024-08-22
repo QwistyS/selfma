@@ -6,9 +6,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
-#include <variant>
 
 #define PANIC(msg) throw std::runtime_error(msg)
 
@@ -17,6 +15,13 @@
  */
 enum class ErrorCode {
     OK = 0,
+    ALLOCATION_FAILED,
+    INVALID_ID,
+    ID_EXHAUSTED,
+    STACK_ERROR,
+    STACK_FULL,
+    ADD_TASK_FAIL,
+    ADD_PROJECT_FAIL,
     MONKEY,
     TOTAL
 };

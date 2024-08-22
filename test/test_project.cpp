@@ -10,6 +10,7 @@ void setUp() {
 }
 
 void tearDown() {
+    obj->clean();
     obj.reset();
 }
 
@@ -36,39 +37,38 @@ void test_project_dtor() {
 void test_project_get_size() {
     Task t1 = {1, "task 1"};
     Task t2 = {2, "task 1"};
-    obj.get()->push_task(&t1);
-    obj.get()->push_task(&t2);
+    obj.get()->add(&t1);
+    obj.get()->add(&t2);
 
-    TEST_ASSERT(obj.get()->get_size() == 2);
+    TEST_ASSERT(obj.get()->size() == 2);
 }
 
 void test_project_task_vec() {
     Task t1 = {1, "task 1"};
     Task t2 = {2, "task 1"};
-    obj.get()->push_task(&t1);
-    obj.get()->push_task(&t2);
+    obj.get()->add(&t1);
+    obj.get()->add(&t2);
 
-    auto tasks = obj.get()->task_vec();
+    auto tasks = obj.get()->to_vector();
     TEST_ASSERT(tasks.size() == 2);
 }
-
 
 void test_project_del_task() {
     Task t1 = {1, "task 1"};
     Task t2 = {2, "task 1"};
-    obj.get()->push_task(&t1);
-    obj.get()->push_task(&t2);
+    obj.get()->add(&t1);
+    obj.get()->add(&t2);
 
-    obj.get()->del_task(&t2);
+    obj.get()->remove(&t2);
     
-    TEST_ASSERT(obj.get()->get_size() == 1);
+    TEST_ASSERT(obj.get()->size() == 1);
 }
 
 void test_project_get_task() {
     Task t1 = {1, "task 1"};
     Task t2 = {2, "task 2"};
-    obj.get()->push_task(&t1);
-    obj.get()->push_task(&t2);
+    obj.get()->add(&t1);
+    obj.get()->add(&t2);
 
     auto ret = obj.get()->get_task(0);
     

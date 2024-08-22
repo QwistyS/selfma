@@ -1,10 +1,8 @@
 #include "container.h"
 #include <cstdint>
-#include <memory>
 #include <string>
 #include "error_handler.h"
 #include "project.h"
-#include "qwistys_alloc.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
 
@@ -23,21 +21,27 @@ static void _print(void* a) {
 }
 
 static void _del(void* p) {
-    if(!p) {
+    if (!p) {
         return;
     }
-    Project* obj = (Project*)p;
+    Project* obj = (Project*) p;
     QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config.id);
-    obj->_clean();
+    obj->clean();
 }
 /** End of callback's */
 
-uint32_t Container::get_size() {
+void Container::_init() {
+    if (auto ret = _id.init(); ret.is_err()) {
+        QWISTYS_HALT("Fail to init id system in Container");
+    }
+}
+
+uint32_t Container::size() {
     return _element_counter;
 }
 
-std::vector<Project*> Container::project_vec() {
-    uint32_t tree_count = get_size();
+std::vector<Project*> Container::to_vector() {
+    uint32_t tree_count = size();
     std::vector<Project*> _tmp;
     uint32_t _increment = 0;
     while (tree_count) {
@@ -45,6 +49,9 @@ std::vector<Project*> Container::project_vec() {
         if (p) {
             _tmp.push_back(p);
             tree_count--;
+        }
+        if (_increment == _id.max()) {
+            break;
         }
     }
     return _tmp;
@@ -56,20 +63,30 @@ void Container::_clean() {
         _root = nullptr;
     }
     _element_counter = 0;
+    _id.clean();
 }
 
-VoidResult Container::add_project(ProjectConf& config) {
+VoidResult Container::add(ProjectConf& config) {
     time(&config.created_at);
+    auto new_id = _id.next();
+    if (new_id.is_err()) {
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Fail to add poject generate id fail");
+    }
+    config.id = new_id.value();
+
     Project p(config);
+
     _root = avlt_insert(_root, &p, sizeof(Project), _comp);
+    _element_counter++;
     return Ok();
 }
 
-VoidResult Container::remove_project(uint32_t project_id) {
+VoidResult Container::remove(uint32_t project_id) {
     Project* delete_candidate = get_project_by_id(_root, project_id);
 
     if (delete_candidate) {
         avlt_delete(_root, delete_candidate, _comp, _del);
+        _id.release(project_id);
         _element_counter--;
         QWISTYS_TODO_MSG("Clea r the Task tree in project before releasing it");
         return Ok();
@@ -82,13 +99,13 @@ VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
     if (p) {
         Task* t = p->get_task(task_id);
         if (t) {
-            p->del_task(t);
+            p->remove(t);
         }
     }
     return Ok();
 }
 
-VoidResult Container::print_projects() {
+VoidResult Container::print() {
     avlt_print(_root, _print);
     return Ok();
 }
@@ -116,9 +133,9 @@ Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
 
 VoidResult Container::add_task(uint32_t project_id, Task* task) {
     Project* project = get_project(project_id);
-    if(!project) {
+    if (!project) {
         return Err(ErrorCode::OK, "project Id[" + std::to_string(project_id) + "] does not exis");
     }
-    project->push_task(task);
+    project->add(task);
     return Ok();
 }

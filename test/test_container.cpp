@@ -1,6 +1,5 @@
 #include <memory>
 #include "project.h"
-#include "qwistys_macros.h"
 #include "unity.h"
 #include "container.h"
 
@@ -15,14 +14,14 @@ void tearDown() {
 
 void test_container_add_project() {
     ProjectConf config = {
-        .id = 0,
+        .id = 0, // There is underline system for deligating ID's
         .name = "Test",
         .description = "Test"
     };
 
-    TEST_ASSERT(container.get()->get_size() == 0);
-    container.get()->add_project(config);
-    TEST_ASSERT(container.get()->get_size() == 1);
+    TEST_ASSERT(container.get()->size() == 0);
+    container.get()->add(config);
+    TEST_ASSERT(container.get()->size() == 1);
 }
 void test_container_remove_project() {}
 void test_container_add_task() {}

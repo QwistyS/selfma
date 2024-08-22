@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "error_handler.h"
 #include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
@@ -27,7 +28,7 @@ void _print(void* p) {
     Task* t = (Task*) p;
     fprintf(stderr, "Task id = %d description = %s \n", t->id, t->description.c_str());
 }
-/** End of callback's */ 
+/** End of callback's */
 
 VoidResult Project::print() {
     avlt_print(_root, _print);
@@ -39,17 +40,21 @@ void Project::self_print() {
 }
 
 void Project::_init() {
+    if (auto ret = _id.init(); ret.is_err()) {
+        QWISTYS_HALT("Fail to init id system in Project");
+    }
 }
 
-void Project::_clean() {
-     if (_root) {
-         avlt_free_tree(_root, _delet);
+void Project::clean() {
+    if (_root) {
+        avlt_free_tree(_root, _delet);
         _root = nullptr;
     }
     _cunter = 0;
+    _id.clean();
 }
 
-uint32_t Project::get_size() {
+uint32_t Project::size() {
     return _cunter;
 }
 
@@ -57,8 +62,9 @@ uint32_t Project::get_self_id() {
     return config.id;
 }
 
-VoidResult Project::del_task(Task* t) {
+VoidResult Project::remove(Task* t) {
     avlt_delete(_root, t, _compare, _delet);
+    _id.release(t->id);
     _cunter--;
     return Ok();
 }
@@ -67,17 +73,19 @@ Task* Project::get_task(uint32_t id) {
     return _get_task(_root, id);
 }
 
-std::vector<Task*> Project::task_vec() {
-    QWISTYS_TODO_MSG("That's should not be a thinkg due the bug in id indexing");
-    auto tree_len= get_size();
-    uint increment = 0;
+std::vector<Task*> Project::to_vector() {
+    auto tree_len = size();
+    uint _increment = 0;
     std::vector<Task*> _tmp;
-    
+
     while (tree_len) {
-        Task* task = get_task(increment++);
+        Task* task = get_task(_increment++);
         if (task) {
             _tmp.push_back(task);
-            tree_len --;
+            tree_len--;
+        }
+        if (_increment == _id.max()) {
+            break;
         }
     }
     return _tmp;
@@ -100,8 +108,14 @@ Task* Project::_get_task(avlt_node_t* node, uint32_t task_id) {
     }
 }
 
-VoidResult Project::push_task(Task* t) {
-    t->id = _cunter++;
+VoidResult Project::add(Task* t) {
+    auto new_id = _id.next();
+    if (new_id.is_err()) {
+        Err(ErrorCode::ADD_TASK_FAIL, "Fail to create id for a task", Severity::LOW);
+    }
+    t->id = new_id.value();
     _root = avlt_insert(_root, t, sizeof(Task), _compare);
+    _cunter++;
+    QWISTYS_DEBUG_MSG("Task added Success id = %d desc = %s", t->id, t->description.c_str());
     return Ok();
 }

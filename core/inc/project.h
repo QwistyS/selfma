@@ -6,6 +6,7 @@
 #include "qwistys_avltree.h"
 #include "task.h"
 #include <ctime>
+#include "ids_pool.h"
 
 struct ProjectConf {
     uint32_t id;
@@ -18,25 +19,25 @@ class Project {
 public:
     ProjectConf config;
     
-    Project(const ProjectConf& conf) : config(conf), _error(_drp), _root(nullptr), _cunter(0) { _init(); };
-    Project() : config({0}), _error(_drp), _root(nullptr), _cunter(0) { _init(); };
-    ~Project() { _clean(); };
+    Project(const ProjectConf& conf) : config(conf), _error(_drp), _root(nullptr), _cunter(0) , _id(4096) { _init(); };
+    Project() : config({0}), _error(_drp), _root(nullptr), _cunter(0) , _id(4096) { _init(); };
+    ~Project() = default;
 
     // get size of current ammount of elements in total in the tree. __NOTE__ : not related to id's.
-    uint32_t get_size();
+    uint32_t size();
     // MEANWHILE get vector of pointers to each element in the tree {sorted}.
-    std::vector<Task*> task_vec();
+    std::vector<Task*> to_vector();
     // Write task to tree
-    VoidResult push_task(Task* t);
+    VoidResult add(Task* t);
     // Remove task from tree
-    VoidResult del_task(Task* t);
+    VoidResult remove(Task* t);
     // Get pointer to Task after finding it by id, NULL in case not exist
     Task* get_task(uint32_t id);
     uint32_t get_self_id();
     void self_print();
     // For debug ussage.
     VoidResult print();
-    void _clean();
+    void clean();
 
 private:
     // if needed some stuff @ ctor time.
@@ -49,6 +50,7 @@ private:
     // The main root node of Task's tree
     avlt_node_t* _root;
     DisasterRecoveryPlan _drp;
+    IDs _id;
 
 protected:
 };

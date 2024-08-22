@@ -8,24 +8,21 @@ set(SOURCE core/main.cpp)
 set(XTRN extern)
 
 add_subdirectory(${XTRN}/Unity)
+add_subdirectory(${XTRN}/stuff)  # Add qwistys_lib as a subdirectory
 
 # Include directories for core module headers
 include_directories(core/inc)
 include_directories(${XTRN}/stuff/inc)
 
-set(STUFF ${XTRN}/stuff/inc/)
-
 file(GLOB SELFMA_IMPL
   core/project.cpp
   core/container.cpp
-  ${STUFF}/qwistys_alloc.c
-  ${STUFF}/qwistys_avltree.c
 )
 
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
 
-target_link_libraries(${PROJECT_NAME} )
+target_link_libraries(${PROJECT_NAME} PRIVATE qwistys_lib)
 
 # Ensure all test files are compiled as C++
 set_source_files_properties(
@@ -48,19 +45,13 @@ add_executable(test_container
     ${SELFMA_IMPL}
 )
 
-# add_executable(test_selfma
-#     test/runner/test_selfma.c
-#     test/test_selfma.c
-#     ${SELFMA_IMPL}
-# )
-
-# Set include directories for test executables
+# Set include directories and link libraries for test executables
 foreach(test_target test_project test_container)
   target_include_directories(${test_target} PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/core/inc
       ${CMAKE_CURRENT_SOURCE_DIR}/${XTRN}/Unity
   )
-  target_link_libraries(${test_target} unity)
+  target_link_libraries(${test_target} PRIVATE unity qwistys_lib)
   
   # Ensure test files are compiled as C++
   set_target_properties(${test_target} PROPERTIES LINKER_LANGUAGE CXX)
