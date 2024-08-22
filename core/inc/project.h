@@ -1,7 +1,6 @@
 #ifndef SELFMA_PROJECT_H
 #define SELFMA_PROJECT_H
 
-#include <cstdint>
 #include <vector>
 #include "error_handler.h"
 #include "qwistys_avltree.h"
@@ -20,6 +19,7 @@ public:
     ProjectConf config;
     
     Project(const ProjectConf& conf) : config(conf), _error(_drp), _root(nullptr), _cunter(0) { _init(); };
+    Project() : config({0}), _error(_drp), _root(nullptr), _cunter(0) { _init(); };
     ~Project() { _clean(); };
 
     // get size of current ammount of elements in total in the tree. __NOTE__ : not related to id's.

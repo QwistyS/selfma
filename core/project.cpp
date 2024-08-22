@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "project.h"
+#include "qwistys_avltree.h"
 #include "qwistys_macros.h"
 
 /** Callbacks for avl tree for Project to task */
@@ -41,7 +42,10 @@ void Project::_init() {
 }
 
 void Project::_clean() {
-
+    auto tasks = task_vec();
+    for (auto task : tasks) {
+        _root = avlt_delete(_root, task, _compare, _delet);
+    }
 }
 
 uint32_t Project::get_size() {
@@ -72,7 +76,6 @@ std::vector<Task*> Project::task_vec() {
         Task* task = get_task(increment++);
         if (task) {
             _tmp.push_back(task);
-            fprintf(stderr, "Task id[%d] descr[%s]\n", task->id, task->description.c_str());
             tree_len --;
         }
     }

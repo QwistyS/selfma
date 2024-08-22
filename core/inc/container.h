@@ -19,7 +19,8 @@ public:
     VoidResult add_task(uint32_t project_id, Task* task);
     VoidResult remove_task(uint32_t project_id, uint32_t task_id);
     Project* get_project(uint32_t id);
-
+    std::vector<Project*> project_vec();
+    uint32_t get_size();
 private:
     Project* get_project_by_id(avlt_node_t* node, uint32_t id);
     void _clean();

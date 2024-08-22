@@ -1,8 +1,10 @@
+#include <memory>
 #include "container.h"
 #include "qwistys_alloc.h"
 
 int main() {
     Container conntainer;
+    auto container = std::make_unique<Container>();
 
     conntainer.add_project("Project about Ramen sop", "The Ramen");
         
@@ -22,10 +24,10 @@ int main() {
     conntainer.add_task(1, &p2);
     conntainer.add_task(1, &p3);
 
-    conntainer.remove_task(1, 0);
-    conntainer.print_projects();
-    conntainer.remove_project(1);
-    conntainer.remove_task(0, 1);
+    // conntainer.remove_task(1, 0);
+    // conntainer.print_projects();
+    // conntainer.remove_project(1);
+    // conntainer.remove_task(0, 1);
     QWISTYS_DEBUG_MSG("============================");
     conntainer.print_projects();
 

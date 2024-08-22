@@ -1,8 +1,10 @@
 #include "container.h"
+#include <cstdint>
 #include <string_view>
 #include "project.h"
-#include "qwistys_macros.h"
 #include "qwistys_alloc.h"
+#include "qwistys_avltree.h"
+#include "qwistys_macros.h"
 
 /** Callback for avl tree Sort by Project type */
 static int _comp(void* a, void* b) {
@@ -25,9 +27,30 @@ static void _del(void* p) {
 }
 /** End of callback's */
 
+uint32_t Container::get_size() {
+    return _element_counter;
+}
+
+std::vector<Project*> Container::project_vec() {
+    uint32_t tree_count = get_size();
+    std::vector<Project*> _tmp;
+    uint32_t _increment = 0;
+    while (tree_count) {
+        Project* p = get_project_by_id(_root, _increment++);
+        if (p) {
+            _tmp.push_back(p);
+            tree_count--;
+        }
+    }
+    return _tmp;
+}
+
 void Container::_clean() {
-    QWISTYS_TODO_MSG("Enable contaned DTOR !!!");
-    // avlt_free_tree(_root, _del);
+    auto projects = project_vec();
+    for (auto proj : projects) {
+        proj->~Project();
+        _root = avlt_delete(_root, proj, _comp, _del);
+    }
 }
 
 VoidResult Container::add_project(std::string_view description, std::string_view name) {
@@ -37,10 +60,10 @@ VoidResult Container::add_project(std::string_view description, std::string_view
     _config.description = description;
     _config.name = name;
     time(&_config.created_at);
-  
+
     Project* pproject = (Project*) qwistys_malloc(sizeof(Project), NULL);
     pproject->config = _config;
-    
+
     _root = avlt_insert(_root, pproject, sizeof(Project), _comp);
     return Ok();
 }
@@ -50,6 +73,7 @@ VoidResult Container::remove_project(uint32_t project_id) {
 
     if (delete_candidate) {
         avlt_delete(_root, delete_candidate, _comp, _del);
+        _element_counter--;
         QWISTYS_TODO_MSG("Clea r the Task tree in project before releasing it");
         return Ok();
     }
