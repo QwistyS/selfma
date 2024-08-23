@@ -4,7 +4,11 @@
 #include <time.h>
 #include <cstdint>
 #include <cstdio>
-#include <string>
+#include <cstring>
+#include "stdlib.h"
+#include "qwistys_macros.h"
+
+#define MAX_DESCRIPTION_LENGTH 1096
 
 struct Duration {
     uint8_t year;
@@ -33,15 +37,32 @@ private:
     void _set_min(uint8_t m) { min = m; }
 };
 
+typedef struct {
+    uint32_t id;
+    Duration duration;
+    char* description;
+} TaskConf_t;
+
 struct Task {
     uint32_t id;
-    std::string description;
+    char description[MAX_DESCRIPTION_LENGTH];
     Duration duration;
     time_t timestamp;
 
+    explicit Task(TaskConf_t* config) {
+        id = config->id;
+        duration = config->duration;
+        
+        // Copy description
+        int min = QWISTYS_MIN(strlen(config->description), MAX_DESCRIPTION_LENGTH - 1);
+        memcpy(description, config->description, min);
+        description[min] = '\0';     
+        time(&timestamp);
+    }
+    
     void print() {
         fprintf(stderr, "-------- Task %d --------\n", id);
-        fprintf(stderr, "-\t desc [%s]\n", description.c_str());
+        fprintf(stderr, "-\t desc [%s]\n", description);
         fprintf(stderr, "-\t duration [%dy-%dm-%dw-%dd-%dh-%dm]\n", duration.year, duration.mounth, duration.week,
                 duration.day, duration.hour, duration.min);
         // fprintf(stderr, "-\t timestamp [%d]\t-\n", timestamp);

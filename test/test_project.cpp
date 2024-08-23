@@ -1,10 +1,14 @@
 #include <memory>
 #include "project.h"
 #include "qwistys_macros.h"
+#include "task.h"
 #include "unity.h"
 
 std::unique_ptr<Project> obj;
-ProjectConf conf(0, "Test", "Test");
+const ProjConf conf(0, "Test", "Test");
+TaskConf_t config = {0, {0, 0, 0, 0, 0, 0}, "Test data"};
+Task t1(&config);
+Task t2(&config);
 
 void setUp() {
     obj = std::make_unique<Project>(conf);
@@ -16,19 +20,11 @@ void tearDown() {
 }
 
 void test_project_ctor() {
-    ProjectConf config {
-        1,
-        "Test",
-        "Test",
-    };
-    time(&config.created_at);
-    auto project = std::make_unique<Project>(config);
-    TEST_ASSERT(project->config.id == 1);
-    TEST_ASSERT_EQUAL_STRING(project->config.name.c_str(), "Test");
-    TEST_ASSERT_EQUAL_STRING(project->config.description.c_str(), "Test");
-    project.reset();
+    
+    TEST_ASSERT(obj->config._id == 0);
+    TEST_ASSERT_EQUAL_STRING(obj->config._name, "Test");
+    TEST_ASSERT_EQUAL_STRING(obj->config._description, "Test");
 
-    TEST_ASSERT(obj->config.id == 0);
 }
 
 void test_project_dtor() {
@@ -36,8 +32,6 @@ void test_project_dtor() {
 }
 
 void test_project_get_size() {
-    Task t1 = {1, "task 1"};
-    Task t2 = {2, "task 1"};
     obj.get()->add(&t1);
     obj.get()->add(&t2);
 
@@ -45,8 +39,6 @@ void test_project_get_size() {
 }
 
 void test_project_task_vec() {
-    Task t1 = {1, "task 1"};
-    Task t2 = {2, "task 1"};
     obj.get()->add(&t1);
     obj.get()->add(&t2);
 
@@ -55,26 +47,22 @@ void test_project_task_vec() {
 }
 
 void test_project_del_task() {
-    Task t1 = {1, "task 1"};
-    Task t2 = {2, "task 1"};
     obj.get()->add(&t1);
     obj.get()->add(&t2);
 
     obj.get()->remove(&t2);
-    
+
     TEST_ASSERT(obj.get()->size() == 1);
 }
 
 void test_project_get_task() {
-    Task t1 = {1, "task 1"};
-    Task t2 = {2, "task 2"};
     obj.get()->add(&t1);
     obj.get()->add(&t2);
 
     auto ret = obj.get()->get_task(0);
-    
+
     TEST_ASSERT(ret->id == 0);
-    TEST_ASSERT_EQUAL_STRING(ret->description.c_str(), t1.description.c_str());
+    TEST_ASSERT_EQUAL_STRING(ret->description, t1.description);
 }
 
 void test_project_get_self_id() {

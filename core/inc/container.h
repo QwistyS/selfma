@@ -12,7 +12,7 @@ public:
     Container() : _element_counter(0), _root(nullptr), _id(4096) { _init(); };
     ~Container() { _clean(); };
 
-    VoidResult add_project(ProjectConf& config);
+    VoidResult add_project(ProjConf& config);
     VoidResult remove_project(uint32_t project_id);
     VoidResult print();
     VoidResult add_task(uint32_t project_id, Task* task);

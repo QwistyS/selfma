@@ -1,6 +1,6 @@
 #include "container.h"
 #include <cstring>
-#include "qwistys_alloc.h"
+#include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
 
@@ -22,7 +22,7 @@ static void _del(void* p) {
         return;
     }
     Project* obj = (Project*) p;
-    QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config.id);
+    QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config._id);
     obj->clean();
 }
 /** End of callback's */
@@ -63,22 +63,18 @@ void Container::_clean() {
     _id.clean();
 }
 
-VoidResult Container::add_project(ProjectConf& config) {
-    time(&config.created_at);
+VoidResult Container::add_project(ProjConf& config) {
+    // Set id to config before writing the object to tree
     auto new_id = _id.next();
-    
     if (new_id.is_err()) {
         return Err(ErrorCode::ADD_PROJECT_FAIL, "Fail to add poject generate id fail");
     }
-    config.id = new_id.value();
+    config._id = new_id.value();
 
-    Project* p = static_cast<Project*>(qwistys_malloc(sizeof(Project), nullptr));
-    if (!p) {
-        return Err(ErrorCode::ALLOCATION_FAIL, "Failed to allocate memory for Project");
-    }
-    new (p) Project(std::move(config));  // Use move semantics here
-
-    _root = avlt_insert(_root, p, sizeof(Project), _comp);
+    // Create object with configurations safe and secure ;)
+    Project p(config);
+    // Copy data to tree
+    _root = avlt_insert(_root, &p, sizeof(Project), _comp);
     _element_counter++;
     return Ok();
 }

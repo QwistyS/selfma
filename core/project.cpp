@@ -36,9 +36,9 @@ VoidResult Project::print() {
 }
 
 void Project::self_print() {
-    fprintf(stderr, "======== PROJECT %d ========\n", config.id);
-    fprintf(stderr, "-\t name - %s \n", config.name.c_str());
-    fprintf(stderr, "-\t description - %s \n", config.description.c_str());
+    fprintf(stderr, "======== PROJECT %d ========\n", config._id);
+    fprintf(stderr, "-\t name - %s \n", config._name);
+    fprintf(stderr, "-\t description - %s \n", config._description);
     fprintf(stderr, "===========================\n");
 }
 
@@ -62,7 +62,7 @@ uint32_t Project::size() {
 }
 
 uint32_t Project::get_self_id() {
-    return config.id;
+    return config._id;
 }
 
 VoidResult Project::remove(Task* t) {
@@ -119,6 +119,6 @@ VoidResult Project::add(Task* t) {
     t->id = new_id.value();
     _root = avlt_insert(_root, t, sizeof(Task), _compare);
     _cunter++;
-    QWISTYS_DEBUG_MSG("Task added Success id = %d desc = %s", t->id, t->description.c_str());
+    QWISTYS_DEBUG_MSG("Task added Success id = %d desc = %s", t->id, t->description);
     return Ok();
 }
