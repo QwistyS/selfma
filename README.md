@@ -40,8 +40,6 @@ Selfma's architecture is designed for scalability and efficiency:
 - **Flexibility**: The core module can be easily integrated with various front-end solutions.
 - **Lightweight**: File-based storage eliminates the need for a separate database system.
 
-... (rest of the README content)
-
 - Project management with unique IDs and descriptions
 - Task management within projects, including task descriptions and durations
 - Custom memory allocation and management
