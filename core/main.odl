@@ -1,0 +1,184 @@
+#include <string>
+#include <vector>
+#include "container.h"
+#include "imtui/imtui-impl-ncurses.h"
+#include "imtui/imtui.h"
+#include "project.h"
+
+
+int selected_project = -1;
+int selected_task = -1;
+bool show_new_project_popup = false;
+bool new_project_added = false;
+
+void ShowNewProjectPopup(Container& container) {
+    static char name[256] = "";
+    static char description[512] = "";
+
+    ImGui::SetNextWindowSize(ImVec2(40, 10), ImGuiCond_Always);
+    
+    ImGui::Text("New Project");
+    ImGui::Separator();
+
+    ImGui::Text("Name:");
+    ImGui::InputText("##Name", name, IM_ARRAYSIZE(name));
+    
+    ImGui::Text("Desc:");
+    ImGui::InputText("##Desc", description, IM_ARRAYSIZE(description));
+    
+    if (ImGui::Button("Add", ImVec2(10, 1))) {
+        if (strlen(name) > 0) {
+            ProjectConf conf;
+            conf.name = std::string(name);
+            conf.description = std::string(description);
+            container.add(conf);
+
+            ImGui::CloseCurrentPopup();
+            memset(name, 0, sizeof(name));
+            memset(description, 0, sizeof(description));
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(10, 1))) {
+        ImGui::CloseCurrentPopup();
+    }
+}
+
+int main() {
+    Container container;
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    auto screen = ImTui_ImplNcurses_Init(true);
+    ImTui_ImplText_Init();
+
+    while (true) {
+        ImTui_ImplNcurses_NewFrame();
+        ImTui_ImplText_NewFrame();
+        ImGui::NewFrame();
+
+        // Projects Panel (left side, blue)
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(30, 30), ImGuiCond_Always);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(0, 0, 255, 255));
+        ImGui::Begin("Projects", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+        ImGui::Text("Projects");
+        ImGui::SameLine(ImGui::GetWindowWidth() - 4);
+
+        if (ImGui::Button("+")) {
+            ImGui::OpenPopup("New Project");
+        }
+
+        if (ImGui::BeginPopupModal("New Project", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ShowNewProjectPopup(container);
+            ImGui::EndPopup();
+        }
+
+        ImGui::Separator();
+
+        auto projects = container.to_vector();
+        
+        for (int i = 0; i < projects.size(); i++) {
+            ImGui::PushID(i);
+            if (ImGui::Selectable(projects[i]->config.name.c_str(), selected_project == i, i,
+                                  ImVec2(ImGui::GetContentRegionAvail().x - 2, 0))) {
+                selected_project = i;
+                selected_task = -1;  // Reset task selection when changing projects
+            }
+            ImGui::SameLine(ImGui::GetWindowWidth() - 4);
+            if (ImGui::Button("-")) {
+                container.remove(i);
+                if (selected_project == i) {
+                    selected_project = -1;
+                    selected_task = -1;
+                } else if (selected_project > i) {
+                    selected_project--;
+                }
+                i--;
+            }
+            ImGui::PopID();
+
+            // Display tasks for the current project
+            if (selected_project == i) {
+                ImGui::Indent();
+                auto tasks = projects[i]->to_vector();
+                for (int j = 0; j < tasks.size(); j++) {
+                    ImGui::PushID(j);
+                    if (ImGui::Selectable(tasks[j]->description.c_str(), selected_task == j, 0,
+                                          ImVec2(ImGui::GetContentRegionAvail().x - 2, 0))) {
+                        selected_task = j;
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::Unindent();
+            }
+        }
+
+        ImGui::End();
+        ImGui::PopStyleColor();
+
+        // Timeline Panel (right side, brown)
+        ImGui::SetNextWindowPos(ImVec2(31, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(69, 20), ImGuiCond_Always);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(165, 42, 42, 255));
+        ImGui::Begin("Timeline", nullptr, ImGuiWindowFlags_NoTitleBar);
+        for (int day = 1; day <= 5; day++) {
+            ImGui::Text("Day %d", day);
+            ImGui::SameLine(day * 13);
+        }
+        ImGui::Separator();
+
+        if (selected_project != -1 && selected_project < projects.size()) {
+            auto tasks = projects[selected_project]->to_vector();
+            for (const auto& task : tasks) {
+                ImGui::Button(task->description.c_str(), ImVec2(task->duration * 13, 2));
+                ImGui::SameLine(0, 0);
+            }
+        }
+        ImGui::End();
+        ImGui::PopStyleColor();
+
+        // Configuration Panel (bottom right)
+        ImGui::SetNextWindowPos(ImVec2(31, 21), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(69, 9), ImGuiCond_Always);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(200, 200, 200, 255));
+        ImGui::Begin("Configuration", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+        if (selected_project != -1 && selected_project < projects.size()) {
+            auto project = projects[selected_project];
+            if (selected_task == -1) {
+                // Display project info
+                ImGui::Text("Project: %s", project->config.name.c_str());
+                ImGui::Text("Description: %s", project->config.description.c_str());
+                ImGui::Text("Tasks: %d", project->to_vector().size());
+            } else if (selected_task < project->to_vector().size()) {
+                // Display task info
+                auto task = project->to_vector()[selected_task];
+                ImGui::Text("Task: %s", task->description.c_str());
+                ImGui::Text("Duration: %d days", task->duration);
+                ImGui::Text("Start Day: %d", task->duration);
+            }
+        } else {
+            ImGui::Text("No project selected");
+        }
+
+        ImGui::End();
+        ImGui::PopStyleColor();
+
+        if (ImGui::IsKeyPressed('Q') || ImGui::IsKeyPressed('q')) {
+            break;
+        }
+
+        ImGui::Render();
+
+        ImTui_ImplText_RenderDrawData(ImGui::GetDrawData(), screen);
+        ImTui_ImplNcurses_DrawScreen();
+    }
+
+    ImTui_ImplText_Shutdown();
+    ImTui_ImplNcurses_Shutdown();
+
+    return 0;
+}

@@ -26,7 +26,7 @@ static void _delet(void* p) {
 
 void _print(void* p) {
     Task* t = (Task*) p;
-    fprintf(stderr, "Task id = %d description = %s \n", t->id, t->description.c_str());
+    t->print();
 }
 /** End of callback's */
 
@@ -36,7 +36,10 @@ VoidResult Project::print() {
 }
 
 void Project::self_print() {
-    fprintf(stderr, "TBD PROJECT CONF PTING\n");
+    fprintf(stderr, "======== PROJECT %d ========\n", config.id);
+    fprintf(stderr, "-\t name - %s \n", config.name.c_str());
+    fprintf(stderr, "-\t description - %s \n", config.description.c_str());
+    fprintf(stderr, "===========================\n");
 }
 
 void Project::_init() {

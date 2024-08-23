@@ -15,7 +15,7 @@
  */
 enum class ErrorCode {
     OK = 0,
-    ALLOCATION_FAILED,
+    ALLOCATION_FAIL,
     INVALID_ID,
     ID_EXHAUSTED,
     STACK_ERROR,

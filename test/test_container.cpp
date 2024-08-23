@@ -13,14 +13,14 @@ void tearDown() {
 }
 
 void test_container_add_project() {
-    ProjectConf config = {
-        .id = 0, // There is underline system for deligating ID's
-        .name = "Test",
-        .description = "Test"
+    ProjectConf config {
+        0, // There is underline system for deligating ID's
+        "Test",
+        "Test"
     };
 
     TEST_ASSERT(container.get()->size() == 0);
-    container.get()->add(config);
+    container.get()->add_project(config);
     TEST_ASSERT(container.get()->size() == 1);
 }
 void test_container_remove_project() {}

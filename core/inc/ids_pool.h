@@ -21,7 +21,7 @@ public:
         if (_stack) {
             return Ok();
         }
-        return Err(ErrorCode::ALLOCATION_FAILED, "Failed to allocate memory for stack", Severity::MEDIUM);
+        return Err(ErrorCode::ALLOCATION_FAIL, "Failed to allocate memory for stack", Severity::MEDIUM);
     }
 
     uint32_t max() {

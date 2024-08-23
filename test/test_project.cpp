@@ -4,9 +4,10 @@
 #include "unity.h"
 
 std::unique_ptr<Project> obj;
+ProjectConf conf(0, "Test", "Test");
 
 void setUp() {
-    obj = std::make_unique<Project>();
+    obj = std::make_unique<Project>(conf);
 }
 
 void tearDown() {
@@ -15,10 +16,10 @@ void tearDown() {
 }
 
 void test_project_ctor() {
-    ProjectConf config = {
-        .id = 1,
-        .name = "Test",
-        .description = "Test",
+    ProjectConf config {
+        1,
+        "Test",
+        "Test",
     };
     time(&config.created_at);
     auto project = std::make_unique<Project>(config);

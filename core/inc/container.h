@@ -12,8 +12,8 @@ public:
     Container() : _element_counter(0), _root(nullptr), _id(4096) { _init(); };
     ~Container() { _clean(); };
 
-    VoidResult add(ProjectConf& config);
-    VoidResult remove(uint32_t project_id);
+    VoidResult add_project(ProjectConf& config);
+    VoidResult remove_project(uint32_t project_id);
     VoidResult print();
     VoidResult add_task(uint32_t project_id, Task* task);
     VoidResult remove_task(uint32_t project_id, uint32_t task_id);
