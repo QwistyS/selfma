@@ -1,26 +1,21 @@
-#include <memory>
-#include "container.h"
-#include "project.h"
-#include "qwistys_alloc.h"
-#include "task.h"
+#include "selfma_api.h"
+#include "qwistys_macros.h"
 
 int main() {
-    auto container = std::make_unique<Container>();
+    bool earh_is_speaning = true;
+    selfma_ctx_t* selfma = selfma_create(0, "Container_id_max256bytes", "user_data_as_buffe_max_1024bytes");
+    QWISTYS_ASSERT(selfma);
 
-    {
-        ProjConf ramen(0, "Ramen", "Learn to make cool Ramen");
-        ProjConf slema(0, "Selfma", "Self managment app");
+    add_project(selfma, "Ramen", "Want to learn ramen");
+    add_task(selfma, 0, "get stuff", "byu stuff for ramen");
 
-        TaskConf_t task_conf = {0, {0, 0, 0, 0, 0, 0}, "By products for Ramen"};
-        Task t(&task_conf);
+    selfma_print(selfma);
 
-        container->add_project(ramen);
-        container->add_task(0, &t);
-    }
+    // while(earh_is_speaning) {
 
-    container->print();
+    // }
 
-    container.reset();
-    qwistys_print_memory_stats();
+    selfma_destroy(selfma);
     return 0;
 }
+

@@ -8,7 +8,7 @@
 #include "stdlib.h"
 #include "qwistys_macros.h"
 
-#define MAX_DESCRIPTION_LENGTH 1096
+#define MAX_DESCRIPTION_LENGTH 1024
 
 struct Duration {
     uint8_t year;

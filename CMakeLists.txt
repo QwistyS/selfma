@@ -24,6 +24,7 @@ include_directories(${XTRN}/imtui/examples)
 file(GLOB SELFMA_IMPL
   core/project.cpp
   core/container.cpp
+  core/selfma_api.cpp
 )
 
 # Main executable
