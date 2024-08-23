@@ -79,7 +79,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=
 ```
 6. Build the project
 ```bash
-cmake --build . --targe all -j$(npro)
+cmake --build . --targe all -j$(nproc)
 ```
 
 ## Usage
