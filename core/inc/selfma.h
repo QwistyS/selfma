@@ -30,6 +30,7 @@ public:
         selfma_destroy(_ctx);
     };
 
+    // Do i need project/task update ? or just rewrite existing?
     bool project_add(DefaultAPI& args);
     bool project_remove(DefaultAPI& args);
     bool project_add_task(DefaultAPI& args);

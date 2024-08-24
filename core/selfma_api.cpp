@@ -115,11 +115,8 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     return Ok();
 }
 
-API_SELFMA bool selfma_serialize(selfma_ctx_t* ctx) {
-    if (auto ret = serialize(ctx); ret.is_err()) {
-        return false;
-    }
-    return true;
+API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
+        return serialize(ctx);
 }
 
 static VoidResult deserialize(selfma_ctx_t* ctx) {
@@ -207,11 +204,8 @@ static VoidResult deserialize(selfma_ctx_t* ctx) {
     return Ok();
 }
 
-API_SELFMA bool selfma_deserialize(selfma_ctx_t* ctx) {
-    if (auto ret = deserialize(ctx); ret.is_err()) {
-        return false;
-    }
-    return true;
+API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
+        return deserialize(ctx);
 }
 
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, const char* user_buffer) {

@@ -5,7 +5,7 @@
 #define TEST_HASH_ID "TEST_HASH1_ID"
 #define TEST_BUFFER "TEST_BUFFER"
 
-std::unique_ptr<Selfma> selfma;
+static std::unique_ptr<Selfma> selfma = nullptr;
 DefaultAPI args;
 
 void setUp() {
@@ -22,6 +22,7 @@ void setUp() {
 
 void tearDown() {
     selfma.release();
+    selfma = nullptr;
 }
 
 void test_project_add_args() {
