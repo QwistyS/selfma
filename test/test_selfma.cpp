@@ -21,7 +21,7 @@ void setUp() {
 }
 
 void tearDown() {
-    selfma.reset();
+    selfma.release();
 }
 
 void test_project_add_args() {
