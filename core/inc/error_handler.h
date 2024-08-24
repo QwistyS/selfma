@@ -22,6 +22,16 @@ enum class ErrorCode {
     STACK_FULL,
     ADD_TASK_FAIL,
     ADD_PROJECT_FAIL,
+    NO_STORAGE,
+    MEMORY_ERROR,
+    FILE_NOT_FOUND,
+    FILE_OPEN_ERROR,
+    WRITE_ERROR,
+    READ_ERROR,
+    INVALID_FORMAT,
+    VERSION_MISMATCH,
+    SECURITY_ERROR,
+    INPUT,
     MONKEY,
     TOTAL
 };
@@ -182,7 +192,7 @@ public:
         if (error.severity() >= Severity::HIGH) {
             recovered = drp_.execute_recovery(error);
             if (!recovered && error.severity() == Severity::CRITICAL) {
-                QWISTYS_DEBUG_MSG("BAD ERROR: {}", error.message().c_str());
+                QWISTYS_ERROR_MSG("BAD ERROR: {}", error.message().c_str());
                 std::abort();
             }
         }
@@ -196,7 +206,7 @@ private:
     DisasterRecoveryPlan& drp_;
 
     void log_error(const Error& error) const {
-        QWISTYS_DEBUG_MSG("[ Severity: {} Error code: {} Error message: {} ]", static_cast<int>(error.severity()),
+        QWISTYS_ERROR_MSG("[ Severity: %d Error code: %d Error message: %s ]", static_cast<int>(error.severity()),
               static_cast<int>(error.code()), error.message().c_str());
     }
 };

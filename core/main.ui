@@ -3,7 +3,7 @@
 #include "container.h"
 #include "imtui/imtui-impl-ncurses.h"
 #include "imtui/imtui.h"
-#include "project.h"
+#include "selfma_api.h"
 
 
 int selected_project = -1;
@@ -28,10 +28,10 @@ void ShowNewProjectPopup(Container& container) {
     
     if (ImGui::Button("Add", ImVec2(10, 1))) {
         if (strlen(name) > 0) {
-            ProjectConf conf;
-            conf.name = std::string(name);
-            conf.description = std::string(description);
-            container.add(conf);
+            // ProjectConf conf;
+            // conf.name = std::string(name);
+            // conf.description = std::string(description);
+            // container.add(conf);
 
             ImGui::CloseCurrentPopup();
             memset(name, 0, sizeof(name));
