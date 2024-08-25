@@ -1,18 +1,12 @@
-#include "selfma_api.h"
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
 #include <fstream>
 #include <memory>
+
+#include "selfma_api.h"
+#include "selfma_file.h"
 #include "container.h"
 #include "error_handler.h"
-#include "project.h"
 #include "qwistys_alloc.h"
 #include "qwistys_macros.h"
-#include "qwistys_stack.h"
-#include "selfma_file.h"
-#include "task.h"
 
 typedef struct selfma_opq {
     std::unique_ptr<Container> container;
@@ -84,31 +78,31 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     if (!file.write(reinterpret_cast<const char*>(header), header_size(header->num_of_chunks))) {
         return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
     }
-    
+
     // write to data
     for (int i = 0; i < projects.size(); i++) {
-        
         auto task_data = projects[i]->to_vector();
-        
+
         if (!file.write(reinterpret_cast<const char*>(projects[i]), sizeof(Project))) {
             file.close();
             return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
         }
         for (auto task : task_data) {
-            
             if (!file.write(reinterpret_cast<const char*>(task), sizeof(Task))) {
                 file.close();
                 return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
             }
         }
-        
     }
     file.close();
     return Ok();
 }
 
 API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
-    return serialize(ctx);
+    if (ctx) {
+        return serialize(ctx);
+    }
+    return Err(ErrorCode::INPUT, "Null ctx passed to serialization");
 }
 
 static VoidResult deserialize(selfma_ctx_t* ctx) {
@@ -197,7 +191,10 @@ static VoidResult deserialize(selfma_ctx_t* ctx) {
 }
 
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
-    return deserialize(ctx);
+    if (ctx) {
+        return deserialize(ctx);
+    }
+    return Err(ErrorCode::INPUT, "Null ctx passed to deserialization");
 }
 
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, const char* user_buffer) {
@@ -220,6 +217,7 @@ API_SELFMA void selfma_destroy(selfma_ctx_t* ctx) {
 
 API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, const char* description) {
     if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
         ProjConf config(0, name, description);
         return ctx->container->add_project(config);
     }
@@ -228,8 +226,8 @@ API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, co
 
 API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
     if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
         return ctx->container->remove_project(id);
-        ;
     }
     return Ok();
 }
@@ -237,6 +235,7 @@ API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
 API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
                                       const char* description) {
     if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
         QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
         TaskConf_t conf = {0};
         conf.description = (char*) malloc(MAX_DESCRIPTION_LENGTH);
@@ -264,6 +263,7 @@ API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, co
 
 API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id, uint32_t task_id) {
     if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
         return ctx->container->remove_task(project_id, task_id);
     }
     return Err(ErrorCode::INPUT, "ctx is null", Severity::LOW);
@@ -271,6 +271,7 @@ API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id,
 
 API_SELFMA void selfma_print(selfma_ctx_t* ctx) {
     if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
         ctx->container->print();
     };
 }
