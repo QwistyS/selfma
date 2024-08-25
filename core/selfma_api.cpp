@@ -51,7 +51,7 @@ size_t header_size(size_t num_of_chunks) {
 }
 
 header_t* get_header_buffer(size_t num_of_chunks) {
-    return (header_t*) qwistys_malloc(sizeof(header_t) + sizeof(uint32_t) * num_of_chunks, nullptr);
+    return (header_t*) qwistys_malloc(header_size(num_of_chunks), nullptr);
 }
 
 static VoidResult serialize(selfma_ctx_t* ctx) {
@@ -64,6 +64,7 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     auto projects = ctx->container->to_vector();
 
     header = get_header_buffer(projects.size());
+    QWISTYS_ASSERT(header);
     header->num_of_chunks = projects.size();
 
     // Get the size of amount of chuns. in different How many "Project" tree you have/ and how long each "Task" tree.
@@ -79,28 +80,37 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     memcpy(header->magic, "FACA", 4);
 
     // write to file
-    auto endpoint = hash_to_file(ctx->uuid);
-    std::ofstream file(endpoint, std::ios::binary | std::ios::trunc);
+    std::ofstream file(header->file_name, std::ios::binary | std::ios::trunc);
     if (!file) {
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
     }
-    return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
 
     // Write header
-    if (!file.write(reinterpret_cast<const char*>(&header), sizeof(header_t))) {
+    if (!file.write(reinterpret_cast<const char*>(header), header_size(header->num_of_chunks))) {
         return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
     }
     // Create data chunk
     uint8_t *data_chunk = (uint8_t*) malloc(sizeof(Project) + (sizeof(Task) * header->num_of_chunks));
+    QWISTYS_ASSERT(data_chunk);
     // write to data_chunk
     uint32_t seek = 0;
     for (int i = 0; i < projects.size(); i++ ) {
         selfma_fformat_t* chunk = (selfma_fformat_t*)&data_chunk[seek];
         auto task_data = projects[i]->to_vector();
+        QWISTYS_DEBUG_MSG("In the task load task array size %d", task_data.size());
+        for (auto task : task_data) {
+            task->print();
+        }
         memcpy(chunk->project, projects[i], sizeof(Project));
         memcpy(chunk->arr, task_data.data(), task_data.size());
         seek += sizeof(Project) + sizeof(Task) * header->each_chunk_size[i];
     }
+
+    if (!file.write(reinterpret_cast<const char*>(data_chunk), seek)) {
+        return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+    }
+    file.close();
+    
     
     // // Write chunk information
     // if (!file.write(reinterpret_cast<const char*>(header.chunk_info), header.chunk_num * sizeof(chunk_info_t))) {
@@ -270,10 +280,10 @@ API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, co
         // }
 
         Task t(&conf);
-        ctx->container->add_task(project_id, &t);
+        auto ret = ctx->container->add_task(project_id, &t);
 
         free(conf.description);
-        return Ok();
+        return ret;
     }
     return Err(ErrorCode::ADD_TASK_FAIL, "Fail to add a task", Severity::LOW);
 }

@@ -13,6 +13,10 @@ bool Selfma::_handle_mem() {
     return false;
 }
 
+bool _handle_input() {
+    return false;
+}
+
 bool Selfma::_handle_add_project() {
     // Unrecoverable
     return false;
@@ -24,6 +28,7 @@ bool Selfma::_handle_add_project() {
 void Selfma::_setup_drp() {
     _drp.register_recovery_action(ErrorCode::MEMORY_ERROR, [this]() { return _handle_mem(); });
     _drp.register_recovery_action(ErrorCode::ADD_PROJECT_FAIL, [this]() { return _handle_add_project(); });
+    _drp.register_recovery_action(ErrorCode::INPUT, [this]() { return _handle_input(); });
 }
 
 bool Selfma::project_add(DefaultAPI& args) {

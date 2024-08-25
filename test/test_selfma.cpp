@@ -6,7 +6,7 @@
 #define TEST_BUFFER "TEST_BUFFER"
 
 static std::unique_ptr<Selfma> selfma = nullptr;
-DefaultAPI args;
+static DefaultAPI args;
 
 void setUp() {
     selfma = std::make_unique<Selfma>(TEST_HASH_ID, TEST_BUFFER);
@@ -17,7 +17,7 @@ void setUp() {
     args.project_id = 0;
     args.name = "Task Name";
     args.descritpion = "Make me ramnet";
-    selfma->project_remove_task(args);
+    selfma->project_add_task(args);
 }
 
 void tearDown() {
@@ -73,5 +73,6 @@ void test_project_remove() {
 }
 
 void test_project_serialize() {
+
     selfma->project_serialize();
 }

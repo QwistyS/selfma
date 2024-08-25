@@ -1,5 +1,7 @@
 #include "container.h"
 #include <cstring>
+#include <string>
+#include "error_handler.h"
 #include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
@@ -92,7 +94,7 @@ VoidResult Container::remove_project(uint32_t project_id) {
         avlt_delete(_root, delete_candidate, _comp, _del);
         _id.release(project_id);
         _element_counter--;
-        QWISTYS_TODO_MSG("Clea r the Task tree in project before releasing it");
+        QWISTYS_TODO_MSG("Clear the Task tree in project before releasing it");
         return Ok();
     }
     return Ok();
@@ -105,9 +107,10 @@ VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
         Task* t = p->get_task(task_id);
         if (t) {
             p->remove(t);
+            return Ok();
         }
     }
-    return Ok();
+    return Err(ErrorCode::REMOVE_TASK_FAIL, "Fail to remove task id " + std::to_string(task_id), Severity::LOW);
 }
 
 VoidResult Container::print() {
