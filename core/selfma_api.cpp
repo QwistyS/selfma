@@ -23,17 +23,12 @@ typedef struct selfma_opq {
 
 typedef struct {
     char project[sizeof(Project)];
-    Task* arr;
+    Task arr[];
 } selfma_fformat_t;
 
 selfma_fformat_t* get_format_buffer(size_t num_of_items) {
     return (selfma_fformat_t*) qwistys_malloc(sizeof(selfma_fformat_t) + (sizeof(Task) * num_of_items), nullptr);
 }
-
-typedef struct {
-    selfma_fformat_t data;
-    size_t num_bytes;
-} chunk_info_t;
 
 typedef struct {
     uint32_t crc;                              // Do i need to check the integrety of data from storaje ?
@@ -79,7 +74,7 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     strncpy(header->user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
     memcpy(header->magic, "FACA", 4);
 
-    // write to file
+    // Open/Create file
     std::ofstream file(header->file_name, std::ios::binary | std::ios::trunc);
     if (!file) {
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
@@ -89,47 +84,26 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     if (!file.write(reinterpret_cast<const char*>(header), header_size(header->num_of_chunks))) {
         return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
     }
-    // Create data chunk
-    uint8_t *data_chunk = (uint8_t*) malloc(sizeof(Project) + (sizeof(Task) * header->num_of_chunks));
-    QWISTYS_ASSERT(data_chunk);
-    // write to data_chunk
-    uint32_t seek = 0;
-    for (int i = 0; i < projects.size(); i++ ) {
-        selfma_fformat_t* chunk = (selfma_fformat_t*)&data_chunk[seek];
+    
+    // write to data
+    for (int i = 0; i < projects.size(); i++) {
+        
         auto task_data = projects[i]->to_vector();
-        QWISTYS_DEBUG_MSG("In the task load task array size %d", task_data.size());
-        for (auto task : task_data) {
-            task->print();
+        
+        if (!file.write(reinterpret_cast<const char*>(projects[i]), sizeof(Project))) {
+            file.close();
+            return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
         }
-        memcpy(chunk->project, projects[i], sizeof(Project));
-        memcpy(chunk->arr, task_data.data(), task_data.size());
-        seek += sizeof(Project) + sizeof(Task) * header->each_chunk_size[i];
-    }
-
-    if (!file.write(reinterpret_cast<const char*>(data_chunk), seek)) {
-        return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+        for (auto task : task_data) {
+            
+            if (!file.write(reinterpret_cast<const char*>(task), sizeof(Task))) {
+                file.close();
+                return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+            }
+        }
+        
     }
     file.close();
-    
-    
-    // // Write chunk information
-    // if (!file.write(reinterpret_cast<const char*>(header.chunk_info), header.chunk_num * sizeof(chunk_info_t))) {
-    //     return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk info");
-    // }
-
-    // // Write chunks data
-    // for (const auto& chunk : chunks) {
-    //     if (!file.write(reinterpret_cast<const char*>(chunk.data.arr), chunk.num_bytes)) {
-    //         return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk data");
-    //     }
-    // }
-
-    // // release
-    // for (auto& chunk : chunks) {
-    //     free(chunk.data.arr);
-    // }
-    // free(header.chunk_info);
-
     return Ok();
 }
 
