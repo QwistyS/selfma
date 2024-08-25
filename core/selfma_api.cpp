@@ -36,16 +36,18 @@ typedef struct {
 } chunk_info_t;
 
 typedef struct {
+    uint32_t crc;                              // Do i need to check the integrety of data from storaje ?
     uint32_t version;                          // File format version
     char magic[4];                             // Magic number for file identification
     uint8_t num_of_chunks;                     // Number of main tree nodes
-    char user_buffer[MAX_DESCRIPTION_LENGTH];  // user buffer
     size_t user_data_length;                   // Length of user data (max 1024 bytes)
-    uint32_t each_chunk_size[];                 // User identification (SHA256)
+    char user_buffer[MAX_DESCRIPTION_LENGTH];  // user buffer
+    char file_name[MAX_NAME_LENGTH];           // user buffer
+    uint32_t each_chunk_size[];                // User identification (SHA256)
 } header_t;
 
 size_t header_size(size_t num_of_chunks) {
-    return sizeof(header_t) + sizeof(uint32_t) * num_of_chunks;  
+    return sizeof(header_t) + sizeof(uint32_t) * num_of_chunks;
 }
 
 header_t* get_header_buffer(size_t num_of_chunks) {
@@ -58,43 +60,48 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
     }
 
     header_t* header = nullptr;
-    
+
     auto projects = ctx->container->to_vector();
 
     header = get_header_buffer(projects.size());
     header->num_of_chunks = projects.size();
-    uint32_t c= 0;
+
+    // Get the size of amount of chuns. in different How many "Project" tree you have/ and how long each "Task" tree.
+    uint32_t c = 0;
     for (auto project : projects) {
         auto tree = project->to_vector();
         header->each_chunk_size[c++] = tree.size();
     }
 
-    // // set header
-    // header.chunk_info = (chunk_info_t*) malloc(needed_size);
-    // header.chunk_num = chunks.size();
-    // strncpy(header.container_id, ctx->uuid, MAX_NAME_LENGTH);
-    // strncpy(header.user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
-    // header.user_data_length = MAX_DESCRIPTION_LENGTH;
-    // memcpy(header.magic, "FACA", 4);
-    // memcpy(header.chunk_info, chunks.data(), chunks.size() * sizeof(chunk_info_t));
+    // set header
+    strncpy(header->file_name, hash_to_file(ctx->uuid).c_str(), MAX_NAME_LENGTH);
+    strncpy(header->user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
+    memcpy(header->magic, "FACA", 4);
 
-    // // write to file
-    // auto endpoint = hash_to_file(ctx->uuid);
-    // if (!is_exist(endpoint)) {
-    //     QWISTYS_TODO_MSG("Handle new sdb file");
-    //     // return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
-    // }
+    // write to file
+    auto endpoint = hash_to_file(ctx->uuid);
+    std::ofstream file(endpoint, std::ios::binary | std::ios::trunc);
+    if (!file) {
+        return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
+    }
+    return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
 
-    // std::ofstream file(endpoint, std::ios::binary | std::ios::trunc);
-    // if (!file) {
-    //     return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
-    // }
-
-    // // Write header
-    // if (!file.write(reinterpret_cast<const char*>(&header), sizeof(header_t))) {
-    //     return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
-    // }
-
+    // Write header
+    if (!file.write(reinterpret_cast<const char*>(&header), sizeof(header_t))) {
+        return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+    }
+    // Create data chunk
+    uint8_t *data_chunk = (uint8_t*) malloc(sizeof(Project) + (sizeof(Task) * header->num_of_chunks));
+    // write to data_chunk
+    uint32_t seek = 0;
+    for (int i = 0; i < projects.size(); i++ ) {
+        selfma_fformat_t* chunk = (selfma_fformat_t*)&data_chunk[seek];
+        auto task_data = projects[i]->to_vector();
+        memcpy(chunk->project, projects[i], sizeof(Project));
+        memcpy(chunk->arr, task_data.data(), task_data.size());
+        seek += sizeof(Project) + sizeof(Task) * header->each_chunk_size[i];
+    }
+    
     // // Write chunk information
     // if (!file.write(reinterpret_cast<const char*>(header.chunk_info), header.chunk_num * sizeof(chunk_info_t))) {
     //     return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk info");
