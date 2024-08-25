@@ -71,3 +71,7 @@ void test_project_remove() {
 
     TEST_ASSERT(1);
 }
+
+void test_project_serialize() {
+    selfma->project_serialize();
+}

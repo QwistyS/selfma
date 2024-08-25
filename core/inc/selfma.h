@@ -35,6 +35,7 @@ public:
     bool project_remove(DefaultAPI& args);
     bool project_add_task(DefaultAPI& args);
     bool project_remove_task(DefaultAPI& args);
+    bool project_serialize();
 
 private:
     selfma_ctx_t *_ctx;

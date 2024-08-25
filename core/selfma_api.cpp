@@ -10,6 +10,7 @@
 #include "project.h"
 #include "qwistys_alloc.h"
 #include "qwistys_macros.h"
+#include "qwistys_stack.h"
 #include "selfma_file.h"
 #include "task.h"
 
@@ -25,6 +26,10 @@ typedef struct {
     Task* arr;
 } selfma_fformat_t;
 
+selfma_fformat_t* get_format_buffer(size_t num_of_items) {
+    return (selfma_fformat_t*) qwistys_malloc(sizeof(selfma_fformat_t) + (sizeof(Task) * num_of_items), nullptr);
+}
+
 typedef struct {
     selfma_fformat_t data;
     size_t num_bytes;
@@ -33,93 +38,90 @@ typedef struct {
 typedef struct {
     uint32_t version;                          // File format version
     char magic[4];                             // Magic number for file identification
-    char container_id[MAX_NAME_LENGTH];        // User identification (SHA256)
+    uint8_t num_of_chunks;                     // Number of main tree nodes
     char user_buffer[MAX_DESCRIPTION_LENGTH];  // user buffer
     size_t user_data_length;                   // Length of user data (max 1024 bytes)
-    uint8_t chunk_num;                         // Number of main tree nodes
-    chunk_info_t* chunk_info;
+    uint32_t each_chunk_size[];                 // User identification (SHA256)
 } header_t;
+
+size_t header_size(size_t num_of_chunks) {
+    return sizeof(header_t) + sizeof(uint32_t) * num_of_chunks;  
+}
+
+header_t* get_header_buffer(size_t num_of_chunks) {
+    return (header_t*) qwistys_malloc(sizeof(header_t) + sizeof(uint32_t) * num_of_chunks, nullptr);
+}
 
 static VoidResult serialize(selfma_ctx_t* ctx) {
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
 
-    header_t header = {0};
-    header.version = HEADER_VERSION;
-
-    std::vector<chunk_info_t> chunks;
-    uint32_t needed_size = 0;
+    header_t* header = nullptr;
+    
     auto projects = ctx->container->to_vector();
-    needed_size += (projects.size() * sizeof(Project));  // add amount of projects objects
 
+    header = get_header_buffer(projects.size());
+    header->num_of_chunks = projects.size();
+    uint32_t c= 0;
     for (auto project : projects) {
         auto tree = project->to_vector();
-        chunk_info_t chunk;
-        chunk.num_bytes = sizeof(Task) * tree.size();
-        chunk.data.arr = (Task*) malloc(sizeof(Task) * tree.size());
-
-        memcpy(&chunk.data.project, project, sizeof(Project));
-
-        for (size_t i = 0; i < tree.size(); i++) {
-            memcpy(&chunk.data.arr[i], tree[i], sizeof(Task));
-        }
-        chunks.push_back(chunk);
-        needed_size += chunk.num_bytes;
+        header->each_chunk_size[c++] = tree.size();
     }
 
-    // set header
-    header.chunk_info = (chunk_info_t*) malloc(needed_size);
-    header.chunk_num = chunks.size();
-    strncpy(header.container_id, ctx->uuid, MAX_NAME_LENGTH);
-    strncpy(header.user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
-    header.user_data_length = MAX_DESCRIPTION_LENGTH;
-    memcpy(header.magic, "FACA", 4);
-    memcpy(header.chunk_info, chunks.data(), chunks.size() * sizeof(chunk_info_t));
+    // // set header
+    // header.chunk_info = (chunk_info_t*) malloc(needed_size);
+    // header.chunk_num = chunks.size();
+    // strncpy(header.container_id, ctx->uuid, MAX_NAME_LENGTH);
+    // strncpy(header.user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
+    // header.user_data_length = MAX_DESCRIPTION_LENGTH;
+    // memcpy(header.magic, "FACA", 4);
+    // memcpy(header.chunk_info, chunks.data(), chunks.size() * sizeof(chunk_info_t));
 
-    // write to file
-    auto endpoint = hash_to_file(ctx->uuid);
-    if (!is_exist(endpoint)) {
-        QWISTYS_TODO_MSG("Handle new sdb file");
-        // return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
-    }
+    // // write to file
+    // auto endpoint = hash_to_file(ctx->uuid);
+    // if (!is_exist(endpoint)) {
+    //     QWISTYS_TODO_MSG("Handle new sdb file");
+    //     // return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
+    // }
 
-    std::ofstream file(endpoint, std::ios::binary | std::ios::trunc);
-    if (!file) {
-        return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
-    }
+    // std::ofstream file(endpoint, std::ios::binary | std::ios::trunc);
+    // if (!file) {
+    //     return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
+    // }
 
-    // Write header
-    if (!file.write(reinterpret_cast<const char*>(&header), sizeof(header_t))) {
-        return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
-    }
+    // // Write header
+    // if (!file.write(reinterpret_cast<const char*>(&header), sizeof(header_t))) {
+    //     return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+    // }
 
-    // Write chunk information
-    if (!file.write(reinterpret_cast<const char*>(header.chunk_info), header.chunk_num * sizeof(chunk_info_t))) {
-        return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk info");
-    }
+    // // Write chunk information
+    // if (!file.write(reinterpret_cast<const char*>(header.chunk_info), header.chunk_num * sizeof(chunk_info_t))) {
+    //     return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk info");
+    // }
 
-    // Write chunks data
-    for (const auto& chunk : chunks) {
-        if (!file.write(reinterpret_cast<const char*>(chunk.data.arr), chunk.num_bytes)) {
-            return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk data");
-        }
-    }
+    // // Write chunks data
+    // for (const auto& chunk : chunks) {
+    //     if (!file.write(reinterpret_cast<const char*>(chunk.data.arr), chunk.num_bytes)) {
+    //         return Err(ErrorCode::WRITE_ERROR, "Failed to write chunk data");
+    //     }
+    // }
 
-    // release
-    for (auto& chunk : chunks) {
-        free(chunk.data.arr);
-    }
-    free(header.chunk_info);
+    // // release
+    // for (auto& chunk : chunks) {
+    //     free(chunk.data.arr);
+    // }
+    // free(header.chunk_info);
 
     return Ok();
 }
 
 API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
-        return serialize(ctx);
+    return serialize(ctx);
 }
 
 static VoidResult deserialize(selfma_ctx_t* ctx) {
+#if 0  // Read and process each chunk
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
@@ -161,7 +163,6 @@ static VoidResult deserialize(selfma_ctx_t* ctx) {
     // Clear existing data in ctx->container
     // ctx->container.reset(); // Not sure we need.
     QWISTYS_DEBUG_MSG("After check");
-#if 0    // Read and process each chunk
     for (const auto& chunk_info : chunks) {
         // Read project data
         // Create a new project in the container
@@ -205,7 +206,7 @@ static VoidResult deserialize(selfma_ctx_t* ctx) {
 }
 
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
-        return deserialize(ctx);
+    return deserialize(ctx);
 }
 
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, const char* user_buffer) {
@@ -236,12 +237,14 @@ API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, co
 
 API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
     if (ctx) {
-        return ctx->container->remove_project(id);;
+        return ctx->container->remove_project(id);
+        ;
     }
     return Ok();
 }
 
-API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name, const char* description) {
+API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
+                                      const char* description) {
     if (ctx) {
         QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
         TaskConf_t conf = {0};

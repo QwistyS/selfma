@@ -6,7 +6,6 @@ int main() {
 
     auto  selfma = std::make_unique<Selfma>("Container_id_max256bytes", "user_data_as_buffe_max_1024bytes");
 
-
     bool earh_is_speaning = true;
     // selfma_ctx_t* selfma = selfma_create(0, "Container_id_max256bytes", "user_data_as_buffe_max_1024bytes");
     // QWISTYS_ASSERT(selfma);

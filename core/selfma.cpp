@@ -60,3 +60,8 @@ bool Selfma::project_remove_task(DefaultAPI& args) {
     }
     return true;
 }
+
+bool Selfma::project_serialize() {
+    return selfma_serialize(_ctx).is_err();
+    
+}
