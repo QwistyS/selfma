@@ -28,6 +28,10 @@ int main() {
     if (!selfma->project_add_task(args_task)) {
         QWISTYS_ERROR_MSG("Fail to add task %s to project %d", args.name.c_str(), args.project_id);
     }
+
+    if (!selfma->project_serialize()) {
+        QWISTYS_ERROR_MSG("Fail to serialise");
+    }
     
     selfma.reset();
     qwistys_print_memory_stats();

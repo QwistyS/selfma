@@ -95,6 +95,7 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
             }
         }
     }
+    qwistys_free(header);
     file.close();
     return Ok();
 }
