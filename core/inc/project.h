@@ -9,7 +9,6 @@
 #include "qwistys_avltree.h"
 #include "task.h"
 
-#define MAX_NAME_LENGTH (MAX_DESCRIPTION_LENGTH / 4)
 
 class ProjConf final {
 public:

@@ -1,70 +1,78 @@
 #ifndef SELFMA_TASK_H
 #define SELFMA_TASK_H
 
+#include <chrono>
 #include <time.h>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
+#include <string.h>
 #include "stdlib.h"
 #include "qwistys_macros.h"
 
 #define MAX_DESCRIPTION_LENGTH 1024
+#define MAX_NAME_LENGTH (MAX_DESCRIPTION_LENGTH / 4)
 
-struct Duration {
-    uint8_t year;
-    uint8_t mounth;
-    uint8_t week;
-    uint8_t day;
-    uint8_t hour;
-    uint8_t min;
+class Timer {
+private:
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::duration<double> duration;
+    bool finished;
 
-    void set(uint8_t year = 0, uint8_t mounth = 0, uint8_t week = 0, uint8_t day = 0, uint8_t hour = 0,
-             uint8_t min = 0) {
-        _set_year(year);
-        _set_mounth(mounth);
-        _set_week(week);
-        _set_days(day);
-        _set_hours(hour);
-        _set_min(min);
+public:
+    Timer(double seconds)
+        : start_time(std::chrono::steady_clock::now()),
+          duration(seconds),
+          finished(false) {}
+
+    bool is_finished() const {
+        return finished;
     }
 
-private:
-    void _set_year(uint8_t y) { year = y; }
-    void _set_mounth(uint8_t m) { mounth = m; }
-    void _set_week(uint8_t w) { week = w; }
-    void _set_days(uint8_t d) { day = d; }
-    void _set_hours(uint8_t h) { hour = h; }
-    void _set_min(uint8_t m) { min = m; }
+    void update() {
+        if (!finished) {
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration<double>(now - start_time) >= duration) {
+                finished = true;
+            }
+        }
+    }
+
+    double get_ramaning_time() const {
+        if (finished) return 0.0;
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration<double>(now - start_time);
+        return QWISTYS_MAX(0.0, duration.count() - elapsed.count());
+    }
 };
+
 
 typedef struct {
     uint32_t id;
-    Duration duration;
     char* description;
+    double duration_in_sec;
 } TaskConf_t;
 
 struct Task {
     uint32_t id;
     char description[MAX_DESCRIPTION_LENGTH];
-    Duration duration;
+    Timer timer;
     time_t timestamp;
 
-    explicit Task(TaskConf_t* config) {
+    explicit Task(TaskConf_t* config) : timer(config->duration_in_sec) {
         id = config->id;
-        duration = config->duration;
-        
-        // Copy description
-        int min = QWISTYS_MIN(strlen(config->description), MAX_DESCRIPTION_LENGTH - 1);
-        memcpy(description, config->description, min);
-        description[min] = '\0';     
+        strncpy(description, config->description, QWISTYS_MIN(strlen(config->description), MAX_NAME_LENGTH - 1));
         time(&timestamp);
+    }
+
+    void update() {
+        timer.update();
+        if (timer.is_finished()) {
+            // Notify
+        }
     }
     
     void print() {
         fprintf(stderr, "-------- Task %d --------\n", id);
         fprintf(stderr, "-\t desc [%s]\n", description);
-        fprintf(stderr, "-\t duration [%dy-%dm-%dw-%dd-%dh-%dm]\n", duration.year, duration.mounth, duration.week,
-                duration.day, duration.hour, duration.min);
+        fprintf(stderr, "-\t duration [%f sec\n", timer.get_ramaning_time());
         // fprintf(stderr, "-\t timestamp [%d]\t-\n", timestamp);
         fprintf(stderr, "---------------------------\n");
     }

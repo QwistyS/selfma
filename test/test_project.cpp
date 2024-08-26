@@ -6,7 +6,7 @@
 
 std::unique_ptr<Project> obj;
 const ProjConf conf(0, "Test", "Test");
-TaskConf_t config = {0, {0, 0, 0, 0, 0, 0}, "Test data"};
+TaskConf_t config = {0, "Test data", 60};
 Task t1(&config);
 Task t2(&config);
 
