@@ -1,14 +1,35 @@
-#include "imtui/imtui-impl-ncurses.h"
-#include "imtui/imtui.h"
+#include <memory>
+#include "qwistys_alloc.h"
+#include "qwistys_macros.h"
+#include "selfma.h"
+
 
 int main() {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+    char buffer[1024] = {0};
+    auto selfma = std::make_unique<Selfma>("file_path", buffer);
 
-    ImTui_ImplText_Init();
-    auto g_screen = ImTui_ImplNcurses_Init(true);
-    while (1) {
-        
+    DefaultAPI args = {
+        .name = "Ramen",
+        .descritpion = "Project about Ramen sup",
+        .project_id = 0,
+    };
+    
+    if (!selfma->project_add(args)) {
+        QWISTYS_ERROR_MSG("Fail to add project %s", args.name.c_str());
     }
+
+    DefaultAPI args_task = {
+        .name = "Task 1",
+        .descritpion = "Get stuff for Ramen sup.",
+        .project_id = 0,
+        .duration = 60 * 1,
+    };
+
+    if (!selfma->project_add_task(args_task)) {
+        QWISTYS_ERROR_MSG("Fail to add task %s to project %d", args.name.c_str(), args.project_id);
+    }
+    
+    selfma.reset();
+    qwistys_print_memory_stats();
     return 0;
 }

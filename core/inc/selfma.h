@@ -12,7 +12,7 @@ struct DefaultAPI {
   std::string descritpion;
   uint32_t project_id;
   uint32_t task_id;
-    
+  double duration;
 };
 
 // Core Lib wrapper to c++

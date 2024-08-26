@@ -1,3 +1,4 @@
+#include <cstring>
 #include <fstream>
 #include <memory>
 
@@ -238,12 +239,12 @@ API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, co
         QWISTYS_ASSERT(ctx->container);
         QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
         TaskConf_t conf = {0};
-        conf.description = (char*) malloc(MAX_DESCRIPTION_LENGTH);
+        conf.description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr);
         if (!conf.description) {
             return Err(ErrorCode::ADD_TASK_FAIL, "Fail to add a task", Severity::LOW);
         }
 
-        strncpy(conf.description, description, MAX_DESCRIPTION_LENGTH - 1);
+        strncpy(conf.description, description, QWISTYS_MIN(strlen(description), MAX_DESCRIPTION_LENGTH - 1));
         conf.description[MAX_DESCRIPTION_LENGTH - 1] = '\0';  // Ensure null-termination
         QWISTYS_TODO_MSG("What taks structs hold in? need to add more info ?");
         // // Similarly for the name field if it exists
@@ -255,7 +256,7 @@ API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, co
         Task t(&conf);
         auto ret = ctx->container->add_task(project_id, &t);
 
-        free(conf.description);
+        qwistys_free(conf.description);
         return ret;
     }
     return Err(ErrorCode::ADD_TASK_FAIL, "Fail to add a task", Severity::LOW);
