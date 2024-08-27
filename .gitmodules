@@ -4,6 +4,3 @@
 [submodule "extern/Unity"]
 	path = extern/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
-[submodule "extern/imtui"]
-	path = extern/imtui
-	url = https://github.com/ggerganov/imtui.git
