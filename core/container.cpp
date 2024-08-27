@@ -149,6 +149,5 @@ VoidResult Container::add_task(uint32_t project_id, Task* task) {
     if (!project) {
         return Err(ErrorCode::OK, "project Id[" + std::to_string(project_id) + "] does not exis");
     }
-    project->add(task);
-    return Ok();
+    return project->add(task);
 }

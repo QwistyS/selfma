@@ -1,0 +1,4 @@
+extern/Unity
+build
+.cache
+.git

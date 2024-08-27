@@ -1,13 +1,15 @@
-#include <cstring>
+#include <string.h>
+#include <cstdint>
 #include <fstream>
 #include <memory>
 
-#include "selfma_api.h"
-#include "selfma_file.h"
 #include "container.h"
 #include "error_handler.h"
+#include "project.h"
 #include "qwistys_alloc.h"
 #include "qwistys_macros.h"
+#include "selfma_api.h"
+#include "selfma_file.h"
 
 typedef struct selfma_opq {
     std::unique_ptr<Container> container;
@@ -45,6 +47,7 @@ header_t* get_header_buffer(size_t num_of_chunks) {
 }
 
 static VoidResult serialize(selfma_ctx_t* ctx) {
+    auto ret = Ok();
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
@@ -55,23 +58,24 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
 
     header = get_header_buffer(projects.size());
     QWISTYS_ASSERT(header);
-    header->num_of_chunks = projects.size();
 
     // Get the size of amount of chuns. in different How many "Project" tree you have/ and how long each "Task" tree.
-    uint32_t c = 0;
-    for (auto project : projects) {
-        auto tree = project->to_vector();
-        header->each_chunk_size[c++] = tree.size();
+    header->num_of_chunks = projects.size();
+    for (auto i = 0; i < header->num_of_chunks; i++) {
+        auto tree = projects[i]->to_vector();
+        header->each_chunk_size[i] = tree.size();
     }
 
     // set header
-    strncpy(header->file_name, hash_to_file(ctx->uuid).c_str(), MAX_NAME_LENGTH);
-    strncpy(header->user_buffer, ctx->user_data, MAX_DESCRIPTION_LENGTH);
+    strncpy(header->file_name, hash_to_file(ctx->uuid).c_str(),
+            QWISTYS_MIN(strlen(hash_to_file(ctx->uuid).c_str()), MAX_NAME_LENGTH - 1));
+    strncpy(header->user_buffer, ctx->user_data, QWISTYS_MIN(strlen(ctx->user_data), MAX_DESCRIPTION_LENGTH));
     memcpy(header->magic, "FACA", 4);
 
     // Open/Create file
     std::ofstream file(header->file_name, std::ios::binary | std::ios::trunc);
     if (!file) {
+        qwistys_free(header);
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
     }
 
@@ -85,19 +89,20 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
         auto task_data = projects[i]->to_vector();
 
         if (!file.write(reinterpret_cast<const char*>(projects[i]), sizeof(Project))) {
-            file.close();
-            return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+            ret = Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+            break;
         }
         for (auto task : task_data) {
             if (!file.write(reinterpret_cast<const char*>(task), sizeof(Task))) {
-                file.close();
-                return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+                ret = Err(ErrorCode::WRITE_ERROR, "Failed to write header");
+                break;
             }
         }
     }
     qwistys_free(header);
+    header = nullptr;
     file.close();
-    return Ok();
+    return ret;
 }
 
 API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
@@ -236,31 +241,23 @@ API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
 
 API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
                                       const char* description) {
+    auto ret = Ok();
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
         QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
-        TaskConf_t conf = {0};
-        conf.description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr);
-        if (!conf.description) {
-            return Err(ErrorCode::ADD_TASK_FAIL, "Fail to add a task", Severity::LOW);
-        }
+        TaskConf_t conf = {
+            .description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr),
+            .duration_in_sec = 60,
+        };
+        QWISTYS_ASSERT(conf.description);
 
         strncpy(conf.description, description, QWISTYS_MIN(strlen(description), MAX_DESCRIPTION_LENGTH - 1));
-        conf.description[MAX_DESCRIPTION_LENGTH - 1] = '\0';  // Ensure null-termination
-        QWISTYS_TODO_MSG("What taks structs hold in? need to add more info ?");
-        // // Similarly for the name field if it exists
-        // if (conf.name) {
-        //     strncpy(conf.name, name, MAX_NAME_LENGTH - 1);
-        //     conf.name[MAX_NAME_LENGTH - 1] = '\0';
-        // }
 
         Task t(&conf);
-        auto ret = ctx->container->add_task(project_id, &t);
-
+        ret = ctx->container->add_task(project_id, &t);
         qwistys_free(conf.description);
-        return ret;
     }
-    return Err(ErrorCode::ADD_TASK_FAIL, "Fail to add a task", Severity::LOW);
+    return ret;
 }
 
 API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id, uint32_t task_id) {

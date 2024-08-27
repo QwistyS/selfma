@@ -45,7 +45,10 @@ bool Selfma::project_add(DefaultAPI& args) {
 }
 
 bool Selfma::project_remove(DefaultAPI& args) {
-    return selfma_remove_project(_ctx, args.project_id).is_err();    
+    if(auto ret = selfma_remove_project(_ctx, args.project_id); ret.is_err()) {
+        return _error.handle_error(ret.error());
+    }
+    return true;
 }
 
 
