@@ -13,15 +13,11 @@ set(SOURCE core/main.cpp)
 set(XTRN extern)
 
 add_subdirectory(${XTRN}/Unity)
-add_subdirectory(${XTRN}/imtui)
 add_subdirectory(${XTRN}/stuff)  # Add qwistys_lib as a subdirectory
 
 # Include directories for core module headers
 include_directories(core/inc)
 include_directories(${XTRN}/stuff/inc)
-include_directories(${XTRN}/imtui/include)
-include_directories(${XTRN}/imtui/third-party)
-include_directories(${XTRN}/imtui/examples)
 
 file(GLOB SELFMA_IMPL
   core/project.cpp
@@ -40,9 +36,6 @@ add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     qwistys_lib
-    imtui
-    imtui-ncurses
-    imgui-for-imtui
     OpenSSL::Crypto
 )
 
