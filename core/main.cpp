@@ -1,32 +1,85 @@
+#include <cstdint>
+#include <queue>
+#include <thread>
+#include <chrono>
 #include <memory>
-#include "selfma.h"
 #include "qwistys_macros.h"
+#include "selfma.h"
+
+enum SelfmaProto {
+    OK = 0,
+    ADD_PROJECT,
+    ADD_TASK,
+    REMOVE_PROJECT,
+    REMOVE_TASK,
+    UPDATA_PROJECT,
+    UPDATA_TASK,
+    GET_PROJECT,
+    GET_TASK,
+    TOTAL,
+};
+
+constexpr uint32_t DEFAULT_SLEEP_TIME = 5;
+static bool earth_is_speaning = true;
+volatile static uint8_t time_to_sleep = DEFAULT_SLEEP_TIME;
+
+struct SelfmaMsg {
+  DefaultAPI args;
+    SelfmaProto cmd;
+};
+
 
 int main() {
 
+    // Somehow get the file
+    // launch the app
+    
+    std::queue<SelfmaMsg> msgs;
+    
     auto selfma = std::make_unique<Selfma>("File", "buffer");
     QWISTYS_DEBUG_MSG("Hello Selfma");
-    DefaultAPI ramen = {
-        .name = "Ramen",
-        .descritpion = "Project about ramen",
-    };
-
-    DefaultAPI app = {
-        .name = "Selfma application",
-        .descritpion = "Software tracking for selfma project",
-    };
-
-    DefaultAPI task_app = {
-        .name = "Test the app",
-        .descritpion = "Make definition of how to make tests for an application",
-        .project_id = 1,
-    };
-
     
-    selfma->project_add(ramen);
-    selfma->project_add(app);
-    selfma->project_add_task(task_app);
-
+    while (earth_is_speaning) {
+        SelfmaMsg msg;
         
+        if (msgs.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep++));
+            continue;
+        } else {
+            msg = msgs.front();
+            msgs.pop();
+        }
+        
+        switch (msg.cmd) {
+            case ADD_PROJECT:
+                selfma->add_project(msg.args);
+                break;
+            case ADD_TASK:
+                selfma->add_task(msg.args);
+                break;
+            case REMOVE_PROJECT:
+                selfma->remove_project(msg.args);
+                break;
+            case REMOVE_TASK:
+                selfma->remove_task(msg.args);
+                break;
+            case UPDATA_PROJECT:
+                break;
+            case UPDATA_TASK:
+                break;
+            case GET_PROJECT:
+                break;
+            case GET_TASK:
+                break;
+            default:
+                break;
+        }
+        time_to_sleep = DEFAULT_SLEEP_TIME;
+    }
+
+    // Marge the client with file
+    // Write Marge to file
+    // closeup routin
+    
     return 0;
 }

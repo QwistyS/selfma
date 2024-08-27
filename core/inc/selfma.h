@@ -31,11 +31,11 @@ public:
     };
 
     // Do i need project/task update ? or just rewrite existing?
-    bool project_add(DefaultAPI& args);
-    bool project_remove(DefaultAPI& args);
-    bool project_add_task(DefaultAPI& args);
-    bool project_remove_task(DefaultAPI& args);
-    bool project_serialize();
+    bool add_project(DefaultAPI& args);
+    bool add_task(DefaultAPI& args);
+    bool remove_project(DefaultAPI& args);
+    bool remove_task(DefaultAPI& args);
+    bool serialise();
 
 private:
     selfma_ctx_t *_ctx;

@@ -14,8 +14,8 @@ void setUp() {
     proj = {"Default Project", "RAMEN", 0};
     task = {"Default Task", "Default Task", 0, 0};
 
-    selfma->project_add(proj);
-    selfma->project_add_task(task);
+    selfma->add_project(proj);
+    selfma->add_task(task);
 }
 
 void tearDown() {
@@ -32,25 +32,25 @@ void test_project_add_args() {
     // false positive
     proj.name = test_name_false;
     proj.descritpion = test_desc_true;
-    TEST_ASSERT(selfma->project_add(proj) == false);
+    TEST_ASSERT(selfma->add_project(proj) == false);
 
     proj.name = test_name_true;
     proj.descritpion = test_desc_false;
-    TEST_ASSERT(selfma->project_add(proj) == false);
+    TEST_ASSERT(selfma->add_project(proj) == false);
 
     // positive
     proj.name = test_name_true;
     proj.descritpion = test_desc_true;
-    TEST_ASSERT(selfma->project_add(proj) == true);
+    TEST_ASSERT(selfma->add_project(proj) == true);
 }
 
 void test_project_add_task() {
     DefaultAPI proj = {"Project Name Project Name", "RAMEN", 0};
-    selfma->project_add(proj);  // Push project.
+    selfma->add_project(proj);  // Push project.
     proj.project_id = 0;
     proj.name = "Day 2";
     proj.descritpion = "Go to market";
-    TEST_ASSERT(selfma->project_add_task(proj) == true);
+    TEST_ASSERT(selfma->add_task(proj) == true);
 }
 
 void test_project_remove() {
@@ -62,9 +62,9 @@ void test_project_remove() {
         0,
     };
 
-    TEST_ASSERT(selfma->project_remove(proj) == true);
+    TEST_ASSERT(selfma->remove_project(proj) == true);
 }
 
 void test_project_serialize() {
-    TEST_ASSERT(selfma->project_serialize());
+    TEST_ASSERT(selfma->serialise());
 }

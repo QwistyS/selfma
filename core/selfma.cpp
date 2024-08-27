@@ -28,7 +28,7 @@ void Selfma::_setup_drp() {
     _drp.register_recovery_action(ErrorCode::INPUT, [this]() { return _handle_input(); });
 }
 
-bool Selfma::project_add(DefaultAPI& args) {
+bool Selfma::add_project(DefaultAPI& args) {
     
     if ((args.name.size() == 0 || args.descritpion.size() == 0) || (args.name.size() >= MAX_NAME_LENGTH|| args.descritpion.size() >= MAX_DESCRIPTION_LENGTH)) {
         return _error.handle_error(Err(ErrorCode::INPUT, "project_add: args sanity fail", Severity::LOW).error());
@@ -41,7 +41,7 @@ bool Selfma::project_add(DefaultAPI& args) {
     return true;
 }
 
-bool Selfma::project_remove(DefaultAPI& args) {
+bool Selfma::remove_project(DefaultAPI& args) {
     if(auto ret = selfma_remove_project(_ctx, args.project_id); ret.is_err()) {
         return _error.handle_error(ret.error());
     }
@@ -49,7 +49,7 @@ bool Selfma::project_remove(DefaultAPI& args) {
 }
 
 
-bool Selfma::project_add_task(DefaultAPI& args) {
+bool Selfma::add_task(DefaultAPI& args) {
     if ((args.name.size() == 0 || args.descritpion.size() == 0) || (args.name.size() >= MAX_NAME_LENGTH|| args.descritpion.size() >= MAX_DESCRIPTION_LENGTH)) {
         return _error.handle_error(Err(ErrorCode::INPUT, "project_add_task: args sanity fail", Severity::LOW).error());
     }
@@ -59,14 +59,14 @@ bool Selfma::project_add_task(DefaultAPI& args) {
     return true;
 }
 
-bool Selfma::project_remove_task(DefaultAPI& args) {
+bool Selfma::remove_task(DefaultAPI& args) {
     if (auto ret = selfma_remove_task(_ctx, args.project_id, args.task_id); ret.is_err()) {
         return _error.handle_error(ret.error());
     }
     return true;
 }
 
-bool Selfma::project_serialize() {
+bool Selfma::serialise() {
     if (auto ret = selfma_serialize(_ctx); ret.is_err()) {
         return _error.handle_error(ret.error());
     }
