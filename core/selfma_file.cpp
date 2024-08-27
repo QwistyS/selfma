@@ -1,5 +1,4 @@
 #include "selfma_file.h"
-#include <openssl/evp.h>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
@@ -20,6 +19,7 @@ bool is_exist(std::string_view path) {
 }
 
 std::string hash_to_file(const std::string& uuid) {
+#if 0 
     // 1. Hash the UUID using EVP API
     std::vector<unsigned char> hash(EVP_MAX_MD_SIZE);
     unsigned int hash_len;
@@ -60,6 +60,8 @@ std::string hash_to_file(const std::string& uuid) {
     fs::path file_path = dir_path / (uuid + ".dat");
     QWISTYS_DEBUG_MSG("FILE TO HASH %s uuid %s", file_path.c_str(), uuid.c_str());
     return file_path.string();
+#endif
+    return uuid;
 }
 
 bool handle_security(const char* uuid, std::fstream& fd, bool (*callback)(const char*, std::fstream&)) {

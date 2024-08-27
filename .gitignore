@@ -1,4 +1,5 @@
 build
+build_win
 .cache
 .vscode
 storage

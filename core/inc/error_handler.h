@@ -37,7 +37,6 @@ enum class ErrorCode {
     MONKEY,
     TOTAL
 };
-
 /**
  * @brief Error severity for disaster recover stuff
  */

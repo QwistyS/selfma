@@ -78,7 +78,7 @@ Task* Project::get_task(uint32_t id) {
 
 std::vector<Task*> Project::to_vector() {
     auto tree_len = size();
-    uint _increment = 0;
+    uint32_t _increment = 0;
     std::vector<Task*> _tmp;
 
     while (tree_len) {

@@ -1,8 +1,5 @@
 #include "selfma.h"
-#include <features.h>
-#include <system_error>
 #include "error_handler.h"
-#include "project.h"
 #include "selfma_api.h"
 #include "task.h"
 

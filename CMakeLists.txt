@@ -9,6 +9,22 @@ add_compile_definitions(STORAGE_PATH="${STORAGE_FOLDER_PATH}")
 # support clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Cross-compilation settings
+if(CMAKE_CROSSCOMPILING)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+  
+  # Ensure we're using the correct toolchain
+  set(CMAKE_C_COMPILER clang)
+  set(CMAKE_CXX_COMPILER clang++)
+  set(CMAKE_RC_COMPILER llvm-rc)
+  
+  # Set the target
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -target x86_64-w64-mingw32")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -target x86_64-w64-mingw32")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -target x86_64-w64-mingw32 -fuse-ld=lld")
+endif()
+
 set(SOURCE core/main.cpp)
 set(XTRN extern)
 
@@ -25,18 +41,13 @@ file(GLOB SELFMA_IMPL
   core/selfma_api.cpp
   core/selfma_file.cpp
   core/selfma.cpp
-
 )
-
-# Find OpenSSL
-find_package(OpenSSL REQUIRED)
 
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     qwistys_lib
-    OpenSSL::Crypto
 )
 
 # Ensure all test files are compiled as C++
@@ -67,14 +78,13 @@ add_executable(test_selfma
     ${SELFMA_IMPL}
 )
 
-
 # Set include directories and link libraries for test executables
 foreach(test_target test_project test_container test_selfma)
   target_include_directories(${test_target} PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/core/inc
       ${CMAKE_CURRENT_SOURCE_DIR}/${XTRN}/Unity
   )
-  target_link_libraries(${test_target} PRIVATE unity qwistys_lib OpenSSL::Crypto)
+  target_link_libraries(${test_target} PRIVATE unity qwistys_lib)
   
   # Ensure test files are compiled as C++
   set_target_properties(${test_target} PROPERTIES LINKER_LANGUAGE CXX)
@@ -88,11 +98,3 @@ add_custom_target(run_all_tests
     COMMAND test_selfma
     DEPENDS test_project test_container test_selfma
 )
-
-# Cross-compilation support for OpenSSL
-if(CMAKE_CROSSCOMPILING)
-  set(OPENSSL_ROOT_DIR ${CMAKE_SYSROOT}/usr)
-  set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
-  set(OPENSSL_CRYPTO_LIBRARY ${OPENSSL_ROOT_DIR}/lib/${CMAKE_LIBRARY_ARCHITECTURE}/libcrypto.so)
-  set(OPENSSL_SSL_LIBRARY ${OPENSSL_ROOT_DIR}/lib/${CMAKE_LIBRARY_ARCHITECTURE}/libssl.so)
-endif()
