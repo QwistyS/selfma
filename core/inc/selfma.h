@@ -47,6 +47,7 @@ public:
     bool serialise();
     void notify(DefaultAPI& event);
     void update();
+    void shutdown();
 
 private:
     selfma_ctx_t* _ctx;

@@ -37,9 +37,12 @@ struct SelfmaMsg {
     SelfmaProto cmd;
 };
 
+static auto selfma = std::make_unique<Selfma>("File", "buffer");
+
 void on_event(DefaultAPI* data) {
     QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
                       data->project_id, data->notify, data->name.c_str(), data->descritpion.c_str());
+    selfma->shutdown();
 }
 
 int main() {
@@ -49,7 +52,6 @@ int main() {
     
     std::queue<SelfmaMsg> msgs;
     
-    auto selfma = std::make_unique<Selfma>("File", "buffer");
     QWISTYS_DEBUG_MSG("Hello Selfma");
 
     selfma->register_callback(NotifyCode::EVENT_MAX_TIME_SLEEP, on_event);

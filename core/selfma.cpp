@@ -1,5 +1,4 @@
 #include "selfma.h"
-#include <cstdint>
 #include "error_handler.h"
 #include "qwistys_macros.h"
 #include "selfma_api.h"
