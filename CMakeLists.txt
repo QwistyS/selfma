@@ -25,6 +25,11 @@ if(CMAKE_CROSSCOMPILING)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -target x86_64-w64-mingw32 -fuse-ld=lld")
 endif()
 
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_compile_options(/wd4996)
+endif()
+
 set(SOURCE core/main.cpp)
 set(XTRN extern)
 
