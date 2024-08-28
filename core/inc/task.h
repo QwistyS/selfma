@@ -46,7 +46,7 @@ public:
 
 typedef struct {
     uint32_t id;
-    char* description;
+    std::string description;
     double duration_in_sec;
 } TaskConf_t;
 
@@ -58,7 +58,7 @@ struct Task {
 
     explicit Task(TaskConf_t* config) : timer(config->duration_in_sec) {
         id = config->id;
-        strncpy(description, config->description, QWISTYS_MIN(strlen(config->description), MAX_NAME_LENGTH - 1));
+        strncpy(description, config->description.c_str(), QWISTYS_MIN(strlen(config->description.c_str()), MAX_NAME_LENGTH - 1));
         time(&timestamp);
     }
 

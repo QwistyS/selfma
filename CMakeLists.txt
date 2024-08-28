@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(selfma)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(STORAGE_FOLDER_PATH "${CMAKE_SOURCE_DIR}/storage")
 add_compile_definitions(STORAGE_PATH="${STORAGE_FOLDER_PATH}")
@@ -45,8 +45,9 @@ file(GLOB SELFMA_IMPL
 
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
+target_compile_options(${PROJECT_NAME} PRIVATE "/W0")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} 
     qwistys_lib
 )
 

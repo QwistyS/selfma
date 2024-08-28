@@ -11,12 +11,14 @@
 #include "selfma_api.h"
 #include "selfma_file.h"
 
+#pragma push(push 1)
 typedef struct selfma_opq {
-    std::unique_ptr<Container> container;
+    Container* container;
     std::fstream fd;
     char uuid[MAX_NAME_LENGTH];
     char user_data[MAX_DESCRIPTION_LENGTH];
 } selfma_ctx_t;
+#pragma pop()
 
 typedef struct {
     char project[sizeof(Project)];
@@ -207,7 +209,8 @@ API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, const char* user_buffer) {
     selfma_ctx_t* ctx = (selfma_ctx_t*) qwistys_malloc(sizeof(selfma_ctx_t), nullptr);
     if (ctx) {
-        ctx->container = std::make_unique<Container>();
+        ctx->container = new Container();
+        //ctx->container.reset(new Container()); // = std::make_shared<Container>();
         memcpy(ctx->uuid, container_id, MAX_NAME_LENGTH);
         memcpy(ctx->user_data, user_buffer, MAX_NAME_LENGTH);
     }
@@ -216,15 +219,15 @@ API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, co
 
 API_SELFMA void selfma_destroy(selfma_ctx_t* ctx) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
-        ctx->container.reset();
+        //QWISTYS_ASSERT(ctx->container);
+        //ctx->container.reset();
         qwistys_free(ctx);
     }
 }
 
 API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, const char* description) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
+        /*QWISTYS_ASSERT*/(ctx->container);
         ProjConf config(0, name, description);
         return ctx->container->add_project(config);
     }
@@ -233,7 +236,7 @@ API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, co
 
 API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
+        // QWISTYS_ASSERT(ctx->container);
         return ctx->container->remove_project(id);
     }
     return Ok();
@@ -242,27 +245,24 @@ API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
 API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
                                       const char* description, uint32_t duration) {
     auto ret = Ok();
+    QWISTYS_ASSERT(description);
+
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
-        QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
+        // QWISTYS_ASSERT(ctx->container);       
         TaskConf_t conf = {
-            .description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr),
+            .description = description,
             .duration_in_sec = duration * 1.0f,
         };
-        QWISTYS_ASSERT(conf.description);
-
-        strncpy(conf.description, description, QWISTYS_MIN(strlen(description), MAX_DESCRIPTION_LENGTH - 1));
-
+        
         Task t(&conf);
         ret = ctx->container->add_task(project_id, &t);
-        qwistys_free(conf.description);
     }
     return ret;
 }
 
 API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id, uint32_t task_id) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
+        // QWISTYS_ASSERT(ctx->container);
         return ctx->container->remove_task(project_id, task_id);
     }
     return Err(ErrorCode::INPUT, "ctx is null", Severity::LOW);
@@ -270,14 +270,14 @@ API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id,
 
 API_SELFMA void selfma_print(selfma_ctx_t* ctx) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
+        // QWISTYS_ASSERT(ctx->container);
         ctx->container->print();
     };
 }
 
 API_SELFMA void selfma_update(selfma_ctx_t* ctx) {
     if (ctx) {
-        QWISTYS_ASSERT(ctx->container);
+        // QWISTYS_ASSERT(ctx->container);
         ctx->container->update();
     }
 }

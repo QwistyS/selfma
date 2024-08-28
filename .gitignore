@@ -3,3 +3,6 @@ build_win
 .cache
 .vscode
 storage
+.vs
+CMakeSettings.json
+

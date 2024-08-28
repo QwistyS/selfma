@@ -12,7 +12,7 @@
 class Container {
 public:
     Container() : _element_counter(0), _root(nullptr), _id(4096), _wd_five_wright(five_wrigth, count_down) { _init(); };
-    ~Container() { _clean(); };
+    ~Container() = default;
 
     VoidResult add_project(ProjConf& config);
     VoidResult remove_project(uint32_t project_id);
