@@ -20,6 +20,7 @@ enum SelfmaProto {
 };
 
 constexpr uint32_t DEFAULT_SLEEP_TIME = 5;
+constexpr uint32_t MAX_SLEEP_TIME = 0xFF;
 static bool earth_is_speaning = true;
 volatile static uint8_t time_to_sleep = DEFAULT_SLEEP_TIME;
 
@@ -38,12 +39,24 @@ int main() {
     
     auto selfma = std::make_unique<Selfma>("File", "buffer");
     QWISTYS_DEBUG_MSG("Hello Selfma");
-    
+
     while (earth_is_speaning) {
         SelfmaMsg msg;
         
         if (msgs.empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep++));
+            if (time_to_sleep == MAX_SLEEP_TIME) {
+                DefaultAPI event = {
+                    .name = "event",
+                    .descritpion = "Max sleep time",
+                    .project_id = 0xFFFFFFFF,
+                    .task_id = 0,
+                    .duration = 0,
+                    .notify = MAX_SLEEP_TIME,
+                }
+                
+                selfma->notify(event);
+            }
             continue;
         } else {
             msg = msgs.front();

@@ -73,3 +73,9 @@ bool Selfma::serialise() {
     return true;
     
 }
+void Selfma::notify(DefaultAPI& event) {
+    auto it = _callbacks.find(event.notify);
+    if (it != _callbacks.end()) {
+        _callbacks[event.notify](event);    
+    }
+}
