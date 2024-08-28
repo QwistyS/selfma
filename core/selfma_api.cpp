@@ -240,14 +240,14 @@ API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
 }
 
 API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
-                                      const char* description) {
+                                      const char* description, uint32_t duration) {
     auto ret = Ok();
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
         QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
         TaskConf_t conf = {
             .description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr),
-            .duration_in_sec = 60,
+            .duration_in_sec = duration * 1.0f,
         };
         QWISTYS_ASSERT(conf.description);
 
@@ -273,4 +273,11 @@ API_SELFMA void selfma_print(selfma_ctx_t* ctx) {
         QWISTYS_ASSERT(ctx->container);
         ctx->container->print();
     };
+}
+
+API_SELFMA void selfma_update(selfma_ctx_t* ctx) {
+    if (ctx) {
+        QWISTYS_ASSERT(ctx->container);
+        ctx->container->update();
+    }
 }

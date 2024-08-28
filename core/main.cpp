@@ -7,7 +7,7 @@
 #include "selfma.h"
 
 enum SelfmaProto {
-    OK = 0,
+    SELFMA_OK = 0,
     ADD_PROJECT,
     ADD_TASK,
     REMOVE_PROJECT,
@@ -16,19 +16,31 @@ enum SelfmaProto {
     UPDATA_TASK,
     GET_PROJECT,
     GET_TASK,
-    TOTAL,
+    SELFMA_TOTAL,
 };
 
-constexpr uint32_t DEFAULT_SLEEP_TIME = 5;
-constexpr uint32_t MAX_SLEEP_TIME = 0xFF;
+
+// Range in ms of time sleep
+// in case when data isnt in use, we deep the thread to sleep
+// However we still wanna to know earlier as possible if some one needs service
+// So after each request, sleep timer will be reset, when no operations arn't ressent
+// thread goes to sleep on MIN time, next cycle if request doesnt come sleep MORE!!!
+// Till Max time will be reached at this point thread is in constunt sleep, do you still need it?
+// maby just kill it and reinit when needed?
+constexpr uint32_t DEFAULT_SLEEP_TIME = 5; // ms
+constexpr uint32_t MAX_SLEEP_TIME = 500; // ms
 static bool earth_is_speaning = true;
-volatile static uint8_t time_to_sleep = DEFAULT_SLEEP_TIME;
+volatile static uint32_t time_to_sleep = DEFAULT_SLEEP_TIME;
 
 struct SelfmaMsg {
   DefaultAPI args;
     SelfmaProto cmd;
 };
 
+void on_event(DefaultAPI* data) {
+    QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
+                      data->project_id, data->notify, data->name.c_str(), data->descritpion.c_str());
+}
 
 int main() {
 
@@ -40,10 +52,42 @@ int main() {
     auto selfma = std::make_unique<Selfma>("File", "buffer");
     QWISTYS_DEBUG_MSG("Hello Selfma");
 
+    selfma->register_callback(NotifyCode::EVENT_MAX_TIME_SLEEP, on_event);
+
+    DefaultAPI proj = {
+        .name = "Ramen",
+        .descritpion = "Project about Rame",
+    };
+
+    DefaultAPI task = {
+        .name = "Learn to make ramen",
+        .descritpion = "Read a book or something of how to make Ramen",
+        .project_id = 0,
+        .task_id = 0,
+        .duration = 1, // One sec for task to exist
+        .notify = 1,
+    };
+
+    SelfmaMsg msg = {
+        .args = proj,
+        .cmd = SelfmaProto::ADD_PROJECT,
+    };
+    
+    SelfmaMsg msg1 = {
+        .args = task,
+        .cmd = SelfmaProto::ADD_TASK,
+    };
+
+    msgs.push(msg);
+    msgs.push(msg1);
+    
     while (earth_is_speaning) {
         SelfmaMsg msg;
-        
+        selfma->update();
+
+        // Description @definitions
         if (msgs.empty()) {
+            QWISTYS_DEBUG_MSG("Sleeping duration %dms", time_to_sleep);
             std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep++));
             if (time_to_sleep == MAX_SLEEP_TIME) {
                 DefaultAPI event = {
@@ -52,9 +96,10 @@ int main() {
                     .project_id = 0xFFFFFFFF,
                     .task_id = 0,
                     .duration = 0,
-                    .notify = MAX_SLEEP_TIME,
-                }
+                    .notify = NotifyCode::EVENT_MAX_TIME_SLEEP,
+                };
                 
+                time_to_sleep = DEFAULT_SLEEP_TIME;
                 selfma->notify(event);
             }
             continue;

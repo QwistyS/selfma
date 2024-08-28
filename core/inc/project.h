@@ -10,12 +10,20 @@
 #include "task.h"
 
 
+static void task_on_tree(void *t) {
+    Task* task = (Task*)t;
+    if (task->update()) {
+        task->print();
+   }
+}
+
+
 class ProjConf final {
 public:
     explicit ProjConf(uint32_t id, const char* name, const char* description) 
         : _id(id), _created_at(0) {
-        setName(name);
-        setDescription(description);
+        set_name(name);
+        set_description(description);
         time(&_created_at);
     }
 
@@ -55,12 +63,12 @@ public:
         return *this;
     }
 
-    void setName(const char* name) {
+    void set_name(const char* name) {
         strncpy(_name, name, MAX_NAME_LENGTH - 1);
         _name[MAX_NAME_LENGTH - 1] = '\0';
     }
 
-    void setDescription(const char* description) {
+    void set_description(const char* description) {
         strncpy(_description, description, MAX_DESCRIPTION_LENGTH - 1);
         _description[MAX_DESCRIPTION_LENGTH - 1] = '\0';
     }
@@ -94,6 +102,11 @@ public:
     Task* get_task(uint32_t id);
     uint32_t get_self_id();
     void self_print();
+    // Here should come the ruotin we want to call on thread.
+    void worker() {
+        // scan for stuff to notify about.
+        avlt_in_order(_root, task_on_tree);
+    }
     // For debug ussage.
     VoidResult print();
     void clean();

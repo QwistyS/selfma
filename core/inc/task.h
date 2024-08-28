@@ -62,11 +62,9 @@ struct Task {
         time(&timestamp);
     }
 
-    void update() {
+    bool update() {
         timer.update();
-        if (timer.is_finished()) {
-            // Notify
-        }
+        return timer.is_finished();
     }
     
     void print() {

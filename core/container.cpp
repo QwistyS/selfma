@@ -1,5 +1,6 @@
 #include "container.h"
 #include <cstring>
+#include <future>
 #include <string>
 #include "error_handler.h"
 #include "project.h"
@@ -19,6 +20,12 @@ static void _print(void* a) {
     pa->print();
 }
 
+static void _update(void* p) {
+    Project* project = (Project*)p;
+    project->worker();
+    project = nullptr;
+}
+
 static void _del(void* p) {
     if (!p) {
         return;
@@ -30,19 +37,16 @@ static void _del(void* p) {
 /** End of callback's */
 
 void Container::_init() {
-    _wd_five_wright.update();
     if (auto ret = _id.init(); ret.is_err()) {
         QWISTYS_HALT("Fail to init id system in Container");
     }
 }
 
 uint32_t Container::size() {
-    _wd_five_wright.update();
     return _element_counter;
 }
 
 std::vector<Project*> Container::to_vector() {
-    _wd_five_wright.update();
     uint32_t tree_count = size();
     std::vector<Project*> _tmp;
     uint32_t _increment = 0;
@@ -60,7 +64,6 @@ std::vector<Project*> Container::to_vector() {
 }
 
 void Container::_clean() {
-    _wd_five_wright.update();
     if (_root) {
         avlt_free_tree(_root, _del);
         _root = nullptr;
@@ -70,7 +73,6 @@ void Container::_clean() {
 }
 
 VoidResult Container::add_project(ProjConf& config) {
-    _wd_five_wright.update();
     // Set id to config before writing the object to tree
     auto new_id = _id.next();
     if (new_id.is_err()) {
@@ -88,7 +90,6 @@ VoidResult Container::add_project(ProjConf& config) {
 }
 
 VoidResult Container::remove_project(uint32_t project_id) {
-    _wd_five_wright.update();
     Project* delete_candidate = get_project_by_id(_root, project_id);
 
     if (delete_candidate) {
@@ -102,7 +103,6 @@ VoidResult Container::remove_project(uint32_t project_id) {
 }
 
 VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
-    _wd_five_wright.update();
     Project* p = get_project_by_id(_root, project_id);
     if (p) {
         Task* t = p->get_task(task_id);
@@ -115,18 +115,15 @@ VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
 }
 
 VoidResult Container::print() {
-    _wd_five_wright.update();
     avlt_print(_root, _print);
     return Ok();
 }
 
 Project* Container::get_project(uint32_t id) {
-    _wd_five_wright.update();
     return get_project_by_id(_root, id);
 }
 
 Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
-    _wd_five_wright.update();
     if (!node) {
         return NULL;
     }
@@ -144,10 +141,13 @@ Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
 }
 
 VoidResult Container::add_task(uint32_t project_id, Task* task) {
-    _wd_five_wright.update();
     Project* project = get_project(project_id);
     if (!project) {
         return Err(ErrorCode::OK, "project Id[" + std::to_string(project_id) + "] does not exis");
     }
     return project->add(task);
+}
+
+void Container::update() {
+    avlt_in_order(_root, _update);    
 }
