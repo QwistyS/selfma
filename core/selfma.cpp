@@ -66,7 +66,7 @@ bool Selfma::remove_task(DefaultAPI& args) {
     return true;
 }
 
-bool Selfma::serialise() {
+bool Selfma::serialize() {
     if (auto ret = selfma_serialize(_ctx); ret.is_err()) {
         return _error.handle_error(ret.error());
     }

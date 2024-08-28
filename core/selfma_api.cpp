@@ -1,7 +1,9 @@
 #include <string.h>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <memory>
+#include <string>
 
 #include "container.h"
 #include "error_handler.h"
@@ -10,12 +12,20 @@
 #include "qwistys_macros.h"
 #include "selfma_api.h"
 #include "selfma_file.h"
+#include "task.h"
+
+static inline void copy_strchar(const std::string& src, char* buffer, size_t MAX_DEFINES) {
+    auto view = std::string_view(src);
+    auto length = QWISTYS_MIN(view.length(), MAX_DEFINES - 1);
+    std::copy_n(view.begin(), length, buffer);
+    buffer[length] = '\0';
+}
 
 typedef struct selfma_opq {
     std::unique_ptr<Container> container;
     std::fstream fd;
     char uuid[MAX_NAME_LENGTH];
-    char user_data[MAX_DESCRIPTION_LENGTH];
+    char* user_data;
 } selfma_ctx_t;
 
 typedef struct {
@@ -204,12 +214,13 @@ API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
     return Err(ErrorCode::INPUT, "Null ctx passed to deserialization");
 }
 
-API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const char* container_id, const char* user_buffer) {
+API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name, char* user_buffer) {
     selfma_ctx_t* ctx = (selfma_ctx_t*) qwistys_malloc(sizeof(selfma_ctx_t), nullptr);
     if (ctx) {
+        QWISTYS_TODO_MSG("Handle windows case, for some reason smart pointers f@cked");
         ctx->container = std::make_unique<Container>();
-        memcpy(ctx->uuid, container_id, MAX_NAME_LENGTH);
-        memcpy(ctx->user_data, user_buffer, MAX_NAME_LENGTH);
+        copy_strchar(file_name, ctx->uuid, MAX_NAME_LENGTH);
+        ctx->user_data = user_buffer;
     }
     return ctx;
 }
@@ -239,23 +250,18 @@ API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id) {
     return Ok();
 }
 
-API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const char* name,
-                                      const char* description, uint32_t duration) {
+API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const std::string& name,
+                                      const std::string& description, uint32_t duration) {
     auto ret = Ok();
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
-        QWISTYS_TODO_MSG("Need to make a decision about duration values. >;-()");
         TaskConf_t conf = {
-            .description = (char*) qwistys_malloc(MAX_DESCRIPTION_LENGTH, nullptr),
+            .description = description,
             .duration_in_sec = duration * 1.0f,
         };
-        QWISTYS_ASSERT(conf.description);
-
-        strncpy(conf.description, description, QWISTYS_MIN(strlen(description), MAX_DESCRIPTION_LENGTH - 1));
 
         Task t(&conf);
         ret = ctx->container->add_task(project_id, &t);
-        qwistys_free(conf.description);
     }
     return ret;
 }

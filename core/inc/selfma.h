@@ -28,8 +28,8 @@ typedef void (*event_callback)(DefaultAPI*);
 // Core Lib wrapper to c++
 class Selfma final {
 public:
-    Selfma(const char* hash_id, const char* buffer) : _error(_drp) {
-        _ctx = selfma_create(0, hash_id, buffer);
+    Selfma(const std::string& file_name, char* buffer) : _error(_drp) {
+        _ctx = selfma_create(0, file_name, buffer);
         if (!_ctx) {
             auto e = Error(ErrorCode::MEMORY_ERROR, "Fail to create context", Severity::CRITICAL);
             _error.handle_error(e);
@@ -44,7 +44,7 @@ public:
     bool remove_project(DefaultAPI& args);
     bool remove_task(DefaultAPI& args);
     void register_callback(uint32_t notify_id, event_callback cb) { _callbacks[notify_id] = std::move(cb); }
-    bool serialise();
+    bool serialize();
     void notify(DefaultAPI& event);
     void update();
     void shutdown();

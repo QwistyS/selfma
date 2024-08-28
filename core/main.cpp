@@ -12,8 +12,8 @@ enum SelfmaProto {
     ADD_TASK,
     REMOVE_PROJECT,
     REMOVE_TASK,
-    UPDATA_PROJECT,
-    UPDATA_TASK,
+    UPDATE_PROJECT,
+    UPDATE_TASK,
     GET_PROJECT,
     GET_TASK,
     SELFMA_TOTAL,
@@ -21,15 +21,15 @@ enum SelfmaProto {
 
 
 // Range in ms of time sleep
-// in case when data isnt in use, we deep the thread to sleep
+// in case when data isn't in use, we deep the thread to sleep
 // However we still wanna to know earlier as possible if some one needs service
-// So after each request, sleep timer will be reset, when no operations arn't ressent
-// thread goes to sleep on MIN time, next cycle if request doesnt come sleep MORE!!!
-// Till Max time will be reached at this point thread is in constunt sleep, do you still need it?
+// So after each request, sleep timer will be reset, when no operations aren't resent
+// thread goes to sleep on MIN time, next cycle if request doesn't come sleep MORE!!!
+// Till Max time will be reached at this point thread is in constant sleep, do you still need it?
 // maby just kill it and reinit when needed?
 constexpr uint32_t DEFAULT_SLEEP_TIME = 5; // ms
 constexpr uint32_t MAX_SLEEP_TIME = 500; // ms
-static bool earth_is_speaning = true;
+static bool earth_is_spinning = true;
 volatile static uint32_t time_to_sleep = DEFAULT_SLEEP_TIME;
 
 struct SelfmaMsg {
@@ -37,7 +37,7 @@ struct SelfmaMsg {
     SelfmaProto cmd;
 };
 
-static auto selfma = std::make_unique<Selfma>("File", "buffer");
+static auto selfma = std::make_unique<Selfma>("File", nullptr);
 
 void on_event(DefaultAPI* data) {
     QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
@@ -82,7 +82,7 @@ int main() {
     msgs.push(msg);
     msgs.push(msg1);
     
-    while (earth_is_speaning) {
+    while (earth_is_spinning) {
         SelfmaMsg msg;
         selfma->update();
 
@@ -122,9 +122,9 @@ int main() {
             case REMOVE_TASK:
                 selfma->remove_task(msg.args);
                 break;
-            case UPDATA_PROJECT:
+            case UPDATE_PROJECT:
                 break;
-            case UPDATA_TASK:
+            case UPDATE_TASK:
                 break;
             case GET_PROJECT:
                 break;

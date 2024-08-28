@@ -10,7 +10,7 @@ DefaultAPI proj;
 DefaultAPI task;
 
 void setUp() {
-    selfma = std::make_unique<Selfma>(TEST_HASH_ID, TEST_BUFFER);
+    selfma = std::make_unique<Selfma>("Some text", nullptr);
     proj = {"Default Project", "RAMEN", 0};
     task = {"Default Task", "Default Task", 0, 0};
 
@@ -66,5 +66,5 @@ void test_project_remove() {
 }
 
 void test_project_serialize() {
-    TEST_ASSERT(selfma->serialise());
+    TEST_ASSERT(selfma->serialize());
 }

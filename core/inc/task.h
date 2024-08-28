@@ -2,9 +2,11 @@
 #define SELFMA_TASK_H
 
 #include <chrono>
+#include <string>
+#include <cstring>
+#include <algorithm>
+#include <string_view>
 #include <time.h>
-#include <string.h>
-#include "stdlib.h"
 #include "qwistys_macros.h"
 
 #define MAX_DESCRIPTION_LENGTH 1024
@@ -35,7 +37,7 @@ public:
         }
     }
 
-    double get_ramaning_time() const {
+    double get_remaining_time() const {
         if (finished) return 0.0;
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration<double>(now - start_time);
@@ -46,7 +48,7 @@ public:
 
 typedef struct {
     uint32_t id;
-    char* description;
+    std::string description;
     double duration_in_sec;
 } TaskConf_t;
 
@@ -56,9 +58,8 @@ struct Task {
     Timer timer;
     time_t timestamp;
 
-    explicit Task(TaskConf_t* config) : timer(config->duration_in_sec) {
-        id = config->id;
-        strncpy(description, config->description, QWISTYS_MIN(strlen(config->description), MAX_NAME_LENGTH - 1));
+    explicit Task(TaskConf_t* config) : id(config->id), timer(config->duration_in_sec) {
+        copy_description(config->description);
         time(&timestamp);
     }
 
@@ -70,10 +71,16 @@ struct Task {
     void print() {
         fprintf(stderr, "-------- Task %d --------\n", id);
         fprintf(stderr, "-\t desc [%s]\n", description);
-        fprintf(stderr, "-\t duration [%f sec\n", timer.get_ramaning_time());
+        fprintf(stderr, "-\t duration [%f sec\n", timer.get_remaining_time());
         // fprintf(stderr, "-\t timestamp [%d]\t-\n", timestamp);
         fprintf(stderr, "---------------------------\n");
     }
+private:
+    void copy_description(const std::string& src) {
+        auto view = std::string_view(src);
+        auto length = QWISTYS_MIN(view.length(), MAX_DESCRIPTION_LENGTH - 1);
+        std::copy_n(view.begin(), length, description);
+        description[length] = '\0';
+    }
 };
-
 #endif  // SELFMA_TASK_H
