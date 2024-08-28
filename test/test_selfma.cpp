@@ -31,16 +31,16 @@ void test_project_add_args() {
 
     // false positive
     proj.name = test_name_false;
-    proj.descritpion = test_desc_true;
+    proj.description = test_desc_true;
     TEST_ASSERT(selfma->add_project(proj) == false);
 
     proj.name = test_name_true;
-    proj.descritpion = test_desc_false;
+    proj.description = test_desc_false;
     TEST_ASSERT(selfma->add_project(proj) == false);
 
     // positive
     proj.name = test_name_true;
-    proj.descritpion = test_desc_true;
+    proj.description = test_desc_true;
     TEST_ASSERT(selfma->add_project(proj) == true);
 }
 
@@ -49,7 +49,7 @@ void test_project_add_task() {
     selfma->add_project(proj);  // Push project.
     proj.project_id = 0;
     proj.name = "Day 2";
-    proj.descritpion = "Go to market";
+    proj.description = "Go to market";
     TEST_ASSERT(selfma->add_task(proj) == true);
 }
 
@@ -62,9 +62,14 @@ void test_project_remove() {
         0,
     };
 
+    selfma->add_project(proj);
+
+    TEST_ASSERT(selfma->remove_project(proj) == true);
+    // True in case when project not exist, still means deleted.
     TEST_ASSERT(selfma->remove_project(proj) == true);
 }
 
 void test_project_serialize() {
     TEST_ASSERT(selfma->serialize());
+    TEST_ASSERT(1);
 }

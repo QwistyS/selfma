@@ -85,7 +85,7 @@ VoidResult Container::add_project(ProjConf& config) {
     // Copy data to tree
     _root = avlt_insert(_root, &p, sizeof(Project), _comp);
     _element_counter++;
-    QWISTYS_DEBUG_MSG("Project {%s} added sucessfull", p.config._name);
+    QWISTYS_DEBUG_MSG("Project {%s} added successful", p.config._name.c_str());
     return Ok();
 }
 

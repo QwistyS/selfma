@@ -4,44 +4,37 @@
 #include <cstdint>
 #include <cstring>
 #include <ctime>
+#include <string>
 #include "error_handler.h"
 #include "ids_pool.h"
 #include "qwistys_avltree.h"
 #include "task.h"
 
-
-static void task_on_tree(void *t) {
-    Task* task = (Task*)t;
+static void task_on_tree(void* t) {
+    Task* task = (Task*) t;
     if (task->update()) {
         task->print();
-   }
-   // here should generate resoponce.
-   
+    }
+    // here should generate resoponce.
 }
-
 
 class ProjConf final {
 public:
-    explicit ProjConf(uint32_t id, const char* name, const char* description) 
-        : _id(id), _created_at(0) {
-        set_name(name);
-        set_description(description);
+    explicit ProjConf(uint32_t id, const std::string& name, const std::string& description)
+        : _id(id), _name(name), _description(description), _created_at(0) {
         time(&_created_at);
     }
 
     // Copy constructor
     ProjConf(const ProjConf& other)
-        : _id(other._id), _created_at(other._created_at) {
-        memcpy(_name, other._name, MAX_NAME_LENGTH);
-        memcpy(_description, other._description, MAX_DESCRIPTION_LENGTH);
-    }
+        : _id(other._id), _name(other._name), _description(other._description), _created_at(other._created_at) {}
 
     // Copy assignment operator
     ProjConf& operator=(const ProjConf& other) {
         if (this != &other) {
             _id = other._id;
-            memcpy(_name, other._name, MAX_NAME_LENGTH);
-            memcpy(_description, other._description, MAX_DESCRIPTION_LENGTH);
+            _name = other._name;
+            _description = other._description;
             _created_at = other._created_at;
         }
         return *this;
@@ -49,38 +42,24 @@ public:
 
     // Move constructor
     ProjConf(ProjConf&& other) noexcept
-        : _id(other._id), _created_at(other._created_at) {
-        memcpy(_name, other._name, MAX_NAME_LENGTH);
-        memcpy(_description, other._description, MAX_DESCRIPTION_LENGTH);
-    }
+        : _id(other._id), _name(other._name), _description(other._description), _created_at(other._created_at) {}
 
     // Move assignment operator
     ProjConf& operator=(ProjConf&& other) noexcept {
         if (this != &other) {
             _id = other._id;
-            memcpy(_name, other._name, MAX_NAME_LENGTH);
-            memcpy(_description, other._description, MAX_DESCRIPTION_LENGTH);
+            _name = other._name;
+            _description = other._description;
             _created_at = other._created_at;
         }
         return *this;
     }
 
-    void set_name(const char* name) {
-        strncpy(_name, name, MAX_NAME_LENGTH - 1);
-        _name[MAX_NAME_LENGTH - 1] = '\0';
-    }
-
-    void set_description(const char* description) {
-        strncpy(_description, description, MAX_DESCRIPTION_LENGTH - 1);
-        _description[MAX_DESCRIPTION_LENGTH - 1] = '\0';
-    }
-
     uint32_t _id;
-    char _name[MAX_NAME_LENGTH];
-    char _description[MAX_DESCRIPTION_LENGTH];
+    std::string _name;
+    std::string _description;
     time_t _created_at;
 };
-
 
 class Project {
 public:

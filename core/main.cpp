@@ -41,7 +41,7 @@ static auto selfma = std::make_unique<Selfma>("File", nullptr);
 
 void on_event(DefaultAPI* data) {
     QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
-                      data->project_id, data->notify, data->name.c_str(), data->descritpion.c_str());
+                      data->project_id, data->notify, data->name.c_str(), data->description.c_str());
 }
 
 int main() {
@@ -57,12 +57,12 @@ int main() {
 
     DefaultAPI proj = {
         .name = "Ramen",
-        .descritpion = "Project about Rame",
+        .description = "Project about Rame",
     };
 
     DefaultAPI task = {
         .name = "Learn to make ramen",
-        .descritpion = "Read a book or something of how to make Ramen",
+        .description = "Read a book or something of how to make Ramen",
         .project_id = 0,
         .task_id = 0,
         .duration = 1, // One sec for task to exist
@@ -93,7 +93,7 @@ int main() {
             if (time_to_sleep == MAX_SLEEP_TIME) {
                 DefaultAPI event = {
                     .name = "event",
-                    .descritpion = "Max sleep time",
+                    .description = "Max sleep time",
                     .project_id = 0xFFFFFFFF,
                     .task_id = 0,
                     .duration = 0,

@@ -13,7 +13,7 @@ typedef struct selfma_opq selfma_ctx_t;
 // Core API
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id,const std::string& file_name, char* user_buffer);
 API_SELFMA void selfma_destroy(selfma_ctx_t* ctx);
-API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, const char* description);
+API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const std::string& name, const std::string& description);
 API_SELFMA VoidResult selfma_remove_project(selfma_ctx_t* ctx, uint32_t id);
 API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, const std::string& name, const std::string& description, uint32_t duration);
 API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id, uint32_t task_id);

@@ -22,8 +22,8 @@ void tearDown() {
 void test_project_ctor() {
     
     TEST_ASSERT(obj->config._id == 0);
-    TEST_ASSERT_EQUAL_STRING(obj->config._name, "Test");
-    TEST_ASSERT_EQUAL_STRING(obj->config._description, "Test");
+    TEST_ASSERT_EQUAL_STRING(obj->config._name.c_str(), "Test");
+    TEST_ASSERT_EQUAL_STRING(obj->config._description.c_str(), "Test");
 
 }
 

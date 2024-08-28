@@ -233,7 +233,7 @@ API_SELFMA void selfma_destroy(selfma_ctx_t* ctx) {
     }
 }
 
-API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const char* name, const char* description) {
+API_SELFMA VoidResult selfma_add_project(selfma_ctx_t* ctx, const std::string& name, const std::string& description) {
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
         ProjConf config(0, name, description);

@@ -10,7 +10,7 @@
 // on each req pass this structure
 struct DefaultAPI {
     std::string name;
-    std::string descritpion;
+    std::string description;
     uint32_t project_id;
     uint32_t task_id;
     double duration;

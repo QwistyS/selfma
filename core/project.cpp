@@ -37,8 +37,8 @@ VoidResult Project::print() {
 
 void Project::self_print() {
     fprintf(stderr, "======== PROJECT %d ========\n", config._id);
-    fprintf(stderr, "-\t name - %s \n", config._name);
-    fprintf(stderr, "-\t description - %s \n", config._description);
+    fprintf(stderr, "-\t name - %s \n", config._name.c_str());
+    fprintf(stderr, "-\t description - %s \n", config._description.c_str());
     fprintf(stderr, "===========================\n");
 }
 
