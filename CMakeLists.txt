@@ -27,6 +27,7 @@ endif()
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DSTATIC_API)
     add_compile_options(/wd4996)
 endif()
 

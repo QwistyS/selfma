@@ -22,7 +22,8 @@ static inline void copy_strchar(const std::string& src, char* buffer, size_t MAX
 }
 
 typedef struct selfma_opq {
-    std::unique_ptr<Container> container;
+    // std::unique_ptr<Container> container;
+    Container* container;
     std::fstream fd;
     char uuid[MAX_NAME_LENGTH];
     char* user_data;
@@ -219,7 +220,8 @@ API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name
     
     if (ctx) {
         QWISTYS_TODO_MSG("Handle windows case, for some reason smart pointers f@cked");
-        ctx->container = std::make_unique<Container>();
+        // ctx->container = std::make_unique<Container>();
+        ctx->container = new Container();
         copy_strchar(file_name, ctx->uuid, MAX_NAME_LENGTH);
         ctx->user_data = user_buffer;
     }
@@ -229,7 +231,8 @@ API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name
 API_SELFMA void selfma_destroy(selfma_ctx_t* ctx) {
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
-        ctx->container.reset();
+        // ctx->container.reset();
+        delete ctx->container;
         qwistys_free(ctx);
     }
 }
