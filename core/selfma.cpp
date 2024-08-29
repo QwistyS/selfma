@@ -6,6 +6,9 @@
 
 /* Handlers*/
 
+void nop_stub(void* p) {
+}
+
 bool Selfma::_handle_mem() {
     // Unrecoverable
     return false;
@@ -28,13 +31,13 @@ void Selfma::_setup_drp() {
     _drp.register_recovery_action(ErrorCode::INPUT, [this]() { return _handle_input(); });
 }
 
-bool Selfma::add_project(DefaultAPI& args) {
+bool Selfma::add_project(const DefaultAPI& args) {
     if ((args.name.size() == 0 || args.description.size() == 0)
         || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
         return _error.handle_error(Err(ErrorCode::INPUT, "project_add: args sanity fail", Severity::LOW).error());
     }
 
-    if (auto ret = selfma_add_project(_ctx, args.name.c_str(), args.description.c_str()); ret.is_err()) {
+    if (auto ret = selfma_add_project(_ctx, args.name, args.description); ret.is_err()) {
         return _error.handle_error(ret.error());
     }
 
@@ -81,6 +84,19 @@ void Selfma::notify(DefaultAPI& event) {
 }
 
 void Selfma::update() {
+   _wrapper(_ctx);
+}
+
+void Selfma::on_update_on(void* p) {
+    
     QWISTYS_TODO_MSG("Who is responsable to clear interupt ?");
-    selfma_update(_ctx);
+    selfma_update((selfma_ctx_t*)p);
+}
+
+void Selfma::evntsystem_off() {
+    _wrapper = &nop_stub;
+}
+
+void Selfma::evntsystem_on() {
+    _wrapper = &Selfma::wrapper_on_update_on;
 }

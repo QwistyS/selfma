@@ -14,6 +14,7 @@ static void task_on_tree(void* t) {
     Task* task = (Task*) t;
     if (task->update()) {
         task->print();
+        task->timer.set(1);
     }
     // here should generate resoponce.
 }

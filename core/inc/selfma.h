@@ -6,6 +6,8 @@
 #include "error_handler.h"
 #include "selfma_api.h"
 
+void nop_stub(void* p);
+
 // Like a command thing. can be staticly allocated for single reff,
 // on each req pass this structure
 struct DefaultAPI {
@@ -24,11 +26,12 @@ enum NotifyCode {
 };
 
 typedef void (*event_callback)(DefaultAPI*);
+typedef void(*wrapper)(void*);
 
 // Core Lib wrapper to c++
 class Selfma final {
 public:
-    Selfma(const std::string& file_name, char* buffer) : _error(_drp) {
+    Selfma(const std::string& file_name, char* buffer) : _error(_drp), _wrapper(&nop_stub) {
         _ctx = selfma_create(0, file_name, buffer);
         if (!_ctx) {
             auto e = Error(ErrorCode::MEMORY_ERROR, "Fail to create context", Severity::CRITICAL);
@@ -38,8 +41,13 @@ public:
 
     ~Selfma() { selfma_destroy(_ctx); };
 
+    static void wrapper_on_update_on(void* p) {
+        Selfma* self = static_cast<Selfma*>(p);
+        self->on_update_on(p);
+    }
+    
     // Do i need project/task update ? or just rewrite existing?
-    bool add_project(DefaultAPI& args);
+    bool add_project(const DefaultAPI& args);
     bool add_task(DefaultAPI& args);
     bool remove_project(DefaultAPI& args);
     bool remove_task(DefaultAPI& args);
@@ -47,16 +55,23 @@ public:
     bool serialize();
     void notify(DefaultAPI& event);
     void update();
+    void evntsystem_on();
+    void evntsystem_off();
     void shutdown();
 
 private:
     selfma_ctx_t* _ctx;
     ErrorHandler _error;
     DisasterRecoveryPlan _drp;
+    
     std::array<event_callback, NotifyCode::NOTIFY_TOTAL> _callbacks;
     void _setup_drp();
     bool _handle_mem();
     bool _handle_add_project();
+    void on_update_on(void* p);
+    void on_update_off(void* p);
+    wrapper _wrapper;
+
 };
 
 #endif  // SELFMA_SELFMA_H

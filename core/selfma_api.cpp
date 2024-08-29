@@ -216,6 +216,7 @@ API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
 
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name, char* user_buffer) {
     selfma_ctx_t* ctx = (selfma_ctx_t*) qwistys_malloc(sizeof(selfma_ctx_t), nullptr);
+    
     if (ctx) {
         QWISTYS_TODO_MSG("Handle windows case, for some reason smart pointers f@cked");
         ctx->container = std::make_unique<Container>();

@@ -81,6 +81,7 @@ int main() {
 
     msgs.push(msg);
     msgs.push(msg1);
+    selfma->evntsystem_on();
     
     while (earth_is_spinning) {
         SelfmaMsg msg;

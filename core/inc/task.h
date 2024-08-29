@@ -2,6 +2,7 @@
 #define SELFMA_TASK_H
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -37,6 +38,12 @@ public:
         }
     }
 
+    void set(uint32_t time_in_sec) {
+        duration = std::chrono::duration<double>(time_in_sec);
+        finished = false;
+        start_time = std::chrono::steady_clock::now();
+    }
+    
     double get_remaining_time() const {
         if (finished) return 0.0;
         auto now = std::chrono::steady_clock::now();
@@ -71,7 +78,7 @@ struct Task {
     void print() {
         fprintf(stderr, "-------- Task %d --------\n", id);
         fprintf(stderr, "-\t desc [%s]\n", description);
-        fprintf(stderr, "-\t duration [%f sec\n", timer.get_remaining_time());
+        fprintf(stderr, "-\t duration [%f sec]\n", timer.get_remaining_time());
         // fprintf(stderr, "-\t timestamp [%d]\t-\n", timestamp);
         fprintf(stderr, "---------------------------\n");
     }
