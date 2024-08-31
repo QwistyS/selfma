@@ -31,7 +31,6 @@ if(MSVC)
     add_compile_options(/wd4996)
 endif()
 
-set(SOURCE core/main.cpp)
 set(XTRN extern)
 
 add_subdirectory(${XTRN}/Unity)
@@ -41,7 +40,7 @@ add_subdirectory(${XTRN}/stuff)  # Add qwistys_lib as a subdirectory
 include_directories(core/inc)
 include_directories(${XTRN}/stuff/inc)
 
-file(GLOB SELFMA_IMPL
+file(GLOB SELFMA_SOURCES
   core/project.cpp
   core/container.cpp
   core/selfma_api.cpp
@@ -49,9 +48,10 @@ file(GLOB SELFMA_IMPL
   core/selfma.cpp
 )
 
-# Main executable
-add_executable(${PROJECT_NAME} ${SOURCE} ${SELFMA_IMPL})
+# Create selfma as a static library
+add_library(${PROJECT_NAME} STATIC ${SELFMA_SOURCES})
 
+# Use PRIVATE linkage for qwistys_lib
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     qwistys_lib
 )
@@ -69,19 +69,16 @@ set_source_files_properties(
 add_executable(test_project 
     test/runner/trun_project.c
     test/test_project.cpp
-    ${SELFMA_IMPL}
 )
 
 add_executable(test_container
     test/runner/trun_container.c
     test/test_container.cpp
-    ${SELFMA_IMPL}
 )
 
 add_executable(test_selfma
     test/runner/trun_selfma.c
     test/test_selfma.cpp
-    ${SELFMA_IMPL}
 )
 
 # Set include directories and link libraries for test executables
@@ -90,7 +87,7 @@ foreach(test_target test_project test_container test_selfma)
       ${CMAKE_CURRENT_SOURCE_DIR}/core/inc
       ${CMAKE_CURRENT_SOURCE_DIR}/${XTRN}/Unity
   )
-  target_link_libraries(${test_target} PRIVATE unity qwistys_lib)
+  target_link_libraries(${test_target} PRIVATE unity ${PROJECT_NAME})
   
   # Ensure test files are compiled as C++
   set_target_properties(${test_target} PROPERTIES LINKER_LANGUAGE CXX)
@@ -104,3 +101,30 @@ add_custom_target(run_all_tests
     COMMAND test_selfma
     DEPENDS test_project test_container test_selfma
 )
+
+# Install rules
+install(TARGETS ${PROJECT_NAME} qwistys_lib
+        EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
+
+install(DIRECTORY core/inc/ 
+        DESTINATION include/${PROJECT_NAME}
+        FILES_MATCHING PATTERN "*.h")
+
+# Export the library targets
+install(EXPORT ${PROJECT_NAME}Targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION lib/cmake/${PROJECT_NAME})
+
+# Create a Config file
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION lib/cmake/${PROJECT_NAME})
+
+# Install the Config file
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        DESTINATION lib/cmake/${PROJECT_NAME})
