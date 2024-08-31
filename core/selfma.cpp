@@ -83,6 +83,11 @@ void Selfma::notify(DefaultAPI& event) {
     return;
 }
 
+void Selfma::shutdown() {
+    selfma_destroy(_ctx);
+}
+
+
 void Selfma::update() {
    _wrapper(_ctx);
 }

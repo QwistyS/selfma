@@ -16,6 +16,9 @@ enum SelfmaProto {
     UPDATE_TASK,
     GET_PROJECT,
     GET_TASK,
+    EVENT_SYS_ON,
+    EVENT_SYS_OFF,
+    KILL,
     SELFMA_TOTAL,
 };
 
@@ -28,7 +31,7 @@ enum SelfmaProto {
 // Till Max time will be reached at this point thread is in constant sleep, do you still need it?
 // maby just kill it and reinit when needed?
 constexpr uint32_t DEFAULT_SLEEP_TIME = 5; // ms
-constexpr uint32_t MAX_SLEEP_TIME = 500; // ms
+constexpr uint32_t MAX_SLEEP_TIME = 10; // ms
 static bool earth_is_spinning = true;
 volatile static uint32_t time_to_sleep = DEFAULT_SLEEP_TIME;
 
@@ -37,8 +40,6 @@ struct SelfmaMsg {
     SelfmaProto cmd;
 };
 
-static auto selfma = std::make_unique<Selfma>("File", nullptr);
-
 void on_event(DefaultAPI* data) {
     QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
                       data->project_id, data->notify, data->name.c_str(), data->description.c_str());
@@ -46,6 +47,7 @@ void on_event(DefaultAPI* data) {
 
 int main() {
 
+    auto selfma = std::make_unique<Selfma>("File", nullptr);
     // Somehow get the file
     // launch the app
     
@@ -57,7 +59,7 @@ int main() {
 
     DefaultAPI proj = {
         .name = "Ramen",
-        .description = "Project about Rame",
+        .description = "Projet about Rame",
     };
 
     DefaultAPI task = {
@@ -131,7 +133,16 @@ int main() {
                 break;
             case GET_TASK:
                 break;
-            default:
+            case EVENT_SYS_ON:
+                selfma->evntsystem_on();
+                break;
+            case EVENT_SYS_OFF:
+                selfma->evntsystem_on();
+                break;
+            case KILL:
+                earth_is_spinning = false;
+                break;
+           default:
                 break;
         }
         time_to_sleep = DEFAULT_SLEEP_TIME;
@@ -139,7 +150,7 @@ int main() {
 
     // Marge the client with file
     // Write Marge to file
-    // closeup routin
-    
+    // closeup     
+    selfma->shutdown();
     return 0;
 }

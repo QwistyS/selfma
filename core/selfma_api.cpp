@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
-#include <memory>
 #include <string>
 
 #include "container.h"
