@@ -25,11 +25,20 @@ if(CMAKE_CROSSCOMPILING)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -target x86_64-w64-mingw32 -fuse-ld=lld")
 endif()
 
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # For GCC and Clang
+    add_compile_options(-Wno-ignored-attributes)
+    add_definitions(-DUSE_GNU_PACKED_ATTRIBUTE)
+elseif(MSVC)
+    # For Microsoft Visual C++
+    add_definitions(-DUSE_MSVC_PRAGMA_PACK)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-DSTATIC_API)
     add_compile_options(/wd4996)
+else()
+    message(WARNING "Unknown compiler, packed structs may not work as expected")
 endif()
+
 
 set(XTRN extern)
 

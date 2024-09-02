@@ -1,8 +1,8 @@
 #include <string.h>
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "container.h"
 #include "error_handler.h"
@@ -12,13 +12,6 @@
 #include "selfma_api.h"
 #include "selfma_file.h"
 #include "task.h"
-
-static inline void copy_strchar(const std::string& src, char* buffer, size_t MAX_DEFINES) {
-    auto view = std::string_view(src);
-    auto length = QWISTYS_MIN(view.length(), MAX_DEFINES - 1);
-    std::copy_n(view.begin(), length, buffer);
-    buffer[length] = '\0';
-}
 
 typedef struct selfma_opq {
     // std::unique_ptr<Container> container;
@@ -37,10 +30,8 @@ selfma_fformat_t* get_format_buffer(size_t num_of_items) {
     return (selfma_fformat_t*) qwistys_malloc(sizeof(selfma_fformat_t) + (sizeof(Task) * num_of_items), nullptr);
 }
 
-static void write_header(std::fstream& file, selfma_ctx_t* ctx) {
-    auto projects = ctx->container->to_vector();
-
-    // Calculate the total size of the header including the variable-length each_chunk_size array
+static void write_header(std::fstream& file, selfma_ctx_t* ctx, std::vector<Project*>& projects) {
+    QWISTYS_TODO_MSG("Do i need to endian the data to file? to support stuff?");
     size_t header_size = sizeof(header_t) + projects.size() * sizeof(uint32_t);
     std::vector<char> header_buffer(header_size, 0);
     header_t* header = reinterpret_cast<header_t*>(header_buffer.data());
@@ -89,25 +80,23 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
     }
 
-    write_header(endpoint.get(), ctx);
+    auto projects = ctx->container->to_vector();
+    write_header(endpoint.get(), ctx, projects);
 
     // Write Project class data
-    auto projects = ctx->container->to_vector();
-    for (const auto& project : projects) {
-        project->self_print();
-        endpoint.get().write(reinterpret_cast<const char*>(&project->config), sizeof(Configurations));
-        
+    for (auto& project : projects) {
+        endpoint.get().write(reinterpret_cast<const char*>(&project->config), sizeof(ProjectConfigurations));
         auto tasks = project->to_vector();
-
         for (const auto& task : tasks) {
-            for (const auto& task : tasks) {
-                task->print();
-                endpoint.get().write(reinterpret_cast<const char*>(task), sizeof(Task));
-            }
+            endpoint.get().write(reinterpret_cast<const char*>(task), sizeof(Task));
         }
     }
 
     QWISTYS_TELEMETRY_END();
+    // for (auto p : projects) {
+    //     p->print();
+    // }
+
     return ret;
 }
 
@@ -143,22 +132,22 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
     // Read chunk sizes
     std::vector<uint32_t> chunk_sizes(header.num_of_chunks);
     endpoint.get().read(reinterpret_cast<char*>(chunk_sizes.data()), header.num_of_chunks * sizeof(uint32_t));
-    
+
+    // Create new context
+    selfma_ctx_t* _tmp_ctx = selfma_create(0, header.file_name, ctx->user_data);
+
     // Read and reconstruct projects and tasks
     for (uint8_t i = 0; i < chunk_sizes.size(); ++i) {
-        Configurations _tmp_configurations;
-        endpoint.get().read(reinterpret_cast<char*>(&_tmp_configurations), sizeof(Configurations));
+        ProjectConfigurations _tmp_configurations;
+        endpoint.get().read(reinterpret_cast<char*>(&_tmp_configurations), sizeof(ProjectConfigurations));
         ProjConf conf(_tmp_configurations.id, _tmp_configurations.name, _tmp_configurations.description);
-        auto project = std::make_shared<Project>(conf);
-
-        project->self_print();
+        _tmp_ctx->container->add_project(conf);
         for (uint32_t j = 0; j < chunk_sizes[i]; ++j) {
             TaskConf_t config;
             auto task = std::make_shared<Task>(&config);
             endpoint.get().read(reinterpret_cast<char*>(task.get()), sizeof(Task));
-            task->print();
+            _tmp_ctx->container->add_task(i, task.get());
         }
-
     }
 
     // Optionally, set user data if it exists
@@ -166,6 +155,14 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
         memcpy(ctx->user_data, header.user_buffer, header.user_data_length);
     }
 
+    QWISTYS_TODO_MSG("Check if you actually can delet the old context");
+    selfma_destroy(ctx);
+    ctx = _tmp_ctx;
+    auto pr_test = ctx->container->to_vector();
+    for (auto p : pr_test) {
+        p->self_print();
+        // p->print();
+    }
     return ret;
 }
 

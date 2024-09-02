@@ -1,10 +1,9 @@
 #include <cassert>
+#include <cstdint>
 #include <memory>
+#include <string>
 #include "selfma.h"
 #include "unity.h"
-
-#define TEST_HASH_ID "TEST_HASH1_ID"
-#define TEST_BUFFER "TEST_BUFFER"
 
 const std::string db_path = STORAGE_PATH"/user_file.hash";
 std::unique_ptr<Selfma> selfma = nullptr;
@@ -72,6 +71,18 @@ void test_project_remove() {
 }
 
 void test_project_serialize() {
+    // Push 5 more porjects
+    for (uint32_t i = 1; i < 5; i++) {
+        DefaultAPI _proj = {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
+        selfma->add_project(_proj);
+    }
+    
+    for (uint32_t projects_size = 0; projects_size < 6; projects_size++) {
+        for (uint32_t i=0; i<10; i++) {
+            DefaultAPI _task = {"TEST_TASK", "TEST_DESC_TASK"+std::to_string(i), projects_size, 0, 100, 0};
+            selfma->add_task(_task);
+        }
+    }
     TEST_ASSERT(selfma->serialize());
 }
 

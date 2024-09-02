@@ -10,13 +10,6 @@
 #include "qwistys_avltree.h"
 #include "task.h"
 
-static void copy_description(const std::string& src, char* dist) {
-    auto view = std::string_view(src);
-    auto length = QWISTYS_MIN(view.length(), MAX_DESCRIPTION_LENGTH - 1);
-    std::copy_n(view.begin(), length, dist);
-    dist[length] = '\0';
-};
-
 static void task_on_tree(void* t) {
     Task* task = (Task*) t;
     if (task->update()) {
@@ -70,22 +63,25 @@ public:
 };
 
 
-struct Configurations {
+struct PACKED_STRUCT ProjectConfigurations {
     uint32_t id;
     char name[MAX_NAME_LENGTH];
     char description[MAX_DESCRIPTION_LENGTH];
     time_t created_at;
 };
+#ifdef USE_MSVC_PRAGMA_PACK
+    #pragma pack(pop)
+#endif
 
 class Project {
 public:
-    Configurations config; // Serializable data
+    ProjectConfigurations config; // Serializable data
 
     Project(const ProjConf& conf) : _error(_drp), _root(nullptr), _cunter(0), _id(4096) {
         _init();
         config.id = conf._id;
-        copy_description(conf._description, config.description);
-        copy_description(conf._name, config.name);
+        copy_strchar(conf._description, config.description, MAX_DESCRIPTION_LENGTH);
+        copy_strchar(conf._name, config.name, MAX_NAME_LENGTH);
         config.created_at = conf._created_at;
         
     };

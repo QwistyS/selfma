@@ -10,8 +10,25 @@
 #include <time.h>
 #include "qwistys_macros.h"
 
+// to support any archtechure
+#ifdef USE_GNU_PACKED_ATTRIBUTE
+    #define PACKED_STRUCT __attribute__((packed))
+#elif defined(USE_MSVC_PRAGMA_PACK)
+    #define PACKED_STRUCT
+    #pragma pack(push, 1)
+#else
+    #define PACKED_STRUCT
+#endif
+
 #define MAX_DESCRIPTION_LENGTH 1024
 #define MAX_NAME_LENGTH (MAX_DESCRIPTION_LENGTH / 4)
+
+static void copy_strchar(const std::string& src, char* buffer, size_t MAX_DEFINES) {
+    auto view = std::string_view(src);
+    auto length = QWISTYS_MIN(view.length(), MAX_DEFINES - 1);
+    std::copy_n(view.begin(), length, buffer);
+    buffer[length] = '\0';
+}
 
 class Timer {
 private:
@@ -58,14 +75,14 @@ typedef struct {
     double duration_in_sec;
 } TaskConf_t;
 
-struct Task {
+struct PACKED_STRUCT Task {
     uint32_t id;
     char description[MAX_DESCRIPTION_LENGTH];
     Timer timer;
     time_t timestamp;
 
     explicit Task(TaskConf_t* config) : id(config->id), timer(config->duration_in_sec) {
-        copy_description(config->description);
+        copy_strchar(config->description, description, MAX_DESCRIPTION_LENGTH);
         time(&timestamp);
     }
 
@@ -81,12 +98,9 @@ struct Task {
         // fprintf(stderr, "-\t timestamp [%d]\t-\n", timestamp);
         fprintf(stderr, "---------------------------\n");
     }
-private:
-    void copy_description(const std::string& src) {
-        auto view = std::string_view(src);
-        auto length = QWISTYS_MIN(view.length(), MAX_DESCRIPTION_LENGTH - 1);
-        std::copy_n(view.begin(), length, description);
-        description[length] = '\0';
-    }
 };
+#ifdef USE_MSVC_PRAGMA_PACK
+    #pragma pack(pop)
+#endif
+
 #endif  // SELFMA_TASK_H
