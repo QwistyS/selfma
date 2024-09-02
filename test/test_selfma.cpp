@@ -1,3 +1,4 @@
+#include <cassert>
 #include <memory>
 #include "selfma.h"
 #include "unity.h"
@@ -5,12 +6,13 @@
 #define TEST_HASH_ID "TEST_HASH1_ID"
 #define TEST_BUFFER "TEST_BUFFER"
 
+const std::string db_path = STORAGE_PATH"/user_file.hash";
 std::unique_ptr<Selfma> selfma = nullptr;
 DefaultAPI proj;
 DefaultAPI task;
 
 void setUp() {
-    selfma = std::make_unique<Selfma>("Some text", nullptr);
+    selfma = std::make_unique<Selfma>(db_path, nullptr);
     proj = {"Default Project", "RAMEN", 0};
     task = {"Default Task", "Default Task", 0, 0};
 
@@ -71,5 +73,8 @@ void test_project_remove() {
 
 void test_project_serialize() {
     TEST_ASSERT(selfma->serialize());
-    TEST_ASSERT(1);
+}
+
+void test_project_deserialize() {
+    TEST_ASSERT(selfma->deserialize());
 }

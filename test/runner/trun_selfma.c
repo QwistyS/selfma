@@ -8,6 +8,7 @@ extern void test_project_add_args();
 extern void test_project_remove();
 extern void test_project_add_task();
 extern void test_project_serialize();
+extern void test_project_deserialize();
 
 int main(void) {
     UnityBegin("test/runner/test_selfma.c");
@@ -16,6 +17,7 @@ int main(void) {
     RUN_TEST(test_project_add_task);
     RUN_TEST(test_project_remove);
     RUN_TEST(test_project_serialize);
+    RUN_TEST(test_project_deserialize);
 
     return (UnityEnd());
 }

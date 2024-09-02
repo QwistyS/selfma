@@ -52,7 +52,6 @@ public:
     }
 };
 
-
 typedef struct {
     uint32_t id;
     std::string description;

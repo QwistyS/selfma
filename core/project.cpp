@@ -36,9 +36,9 @@ VoidResult Project::print() {
 }
 
 void Project::self_print() {
-    fprintf(stderr, "======== PROJECT %d ========\n", config._id);
-    fprintf(stderr, "-\t name - %s \n", config._name.c_str());
-    fprintf(stderr, "-\t description - %s \n", config._description.c_str());
+    fprintf(stderr, "======== PROJECT %d ========\n", config.id);
+    fprintf(stderr, "-\t name - %s \n", config.name);
+    fprintf(stderr, "-\t description - %s \n", config.description);
     fprintf(stderr, "===========================\n");
 }
 
@@ -62,7 +62,7 @@ uint32_t Project::size() {
 }
 
 uint32_t Project::get_self_id() {
-    return config._id;
+    return config.id;
 }
 
 VoidResult Project::remove(Task* t) {

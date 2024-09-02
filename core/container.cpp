@@ -30,7 +30,7 @@ static void _del(void* p) {
         return;
     }
     Project* obj = (Project*) p;
-    QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config._id);
+    QWISTYS_DEBUG_MSG("Clearing tree of project [%d]", obj->config.id);
     obj->clean();
 }
 /** End of callback's */
@@ -84,7 +84,7 @@ VoidResult Container::add_project(ProjConf& config) {
     // Copy data to tree
     _root = avlt_insert(_root, &p, sizeof(Project), _comp);
     _element_counter++;
-    QWISTYS_DEBUG_MSG("Project {%s} added successful", p.config._name.c_str());
+    QWISTYS_DEBUG_MSG("Project {%s} added successful", p.config.name);
     return Ok();
 }
 

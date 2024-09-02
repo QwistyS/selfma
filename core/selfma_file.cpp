@@ -1,14 +1,26 @@
 #include "selfma_file.h"
 #include <filesystem>
-#include <iomanip>
-#include <sstream>
 #include <string>
-#include <vector>
-#include "qwistys_macros.h"
-
-namespace fs = std::filesystem;
 
 const static std::filesystem::path storage{STORAGE_PATH};
+
+void header_print(const header_t* h) {
+    fprintf(stderr, "CRC: 0x%08x\n", h->crc);   
+    fprintf(stderr, "VER: %d\n", h->version);   
+    fprintf(stderr, "MAGIC: %s\n", h->magic);   
+    fprintf(stderr, "CHUNKS: %d\n", h->num_of_chunks);   
+    fprintf(stderr, "USR_DATA_LENG: %zu\n", h->user_data_length);   
+    fprintf(stderr, "FILE: %s\n", h->file_name);   
+    fprintf(stderr, "POINTER: 0x%08x\n", h->each_chunk_size);   
+}
+
+header_t* get_header_buffer(size_t num_of_chunks) {
+    return (header_t*) qwistys_malloc(header_size(num_of_chunks), nullptr);
+}
+
+size_t header_size(size_t num_of_chunks) {
+    return sizeof(header_t) + sizeof(uint32_t) * num_of_chunks;
+}
 
 bool is_storage() {
     return is_exist(STORAGE_PATH);

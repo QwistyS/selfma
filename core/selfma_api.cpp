@@ -1,8 +1,8 @@
 #include <string.h>
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <string>
+#include <memory>
 
 #include "container.h"
 #include "error_handler.h"
@@ -37,81 +37,77 @@ selfma_fformat_t* get_format_buffer(size_t num_of_items) {
     return (selfma_fformat_t*) qwistys_malloc(sizeof(selfma_fformat_t) + (sizeof(Task) * num_of_items), nullptr);
 }
 
-typedef struct {
-    uint32_t crc;                              // Do i need to check the integrety of data from storaje ?
-    uint32_t version;                          // File format version
-    char magic[4];                             // Magic number for file identification
-    uint8_t num_of_chunks;                     // Number of main tree nodes
-    size_t user_data_length;                   // Length of user data (max 1024 bytes)
-    char user_buffer[MAX_DESCRIPTION_LENGTH];  // user buffer
-    char file_name[MAX_NAME_LENGTH];           // user buffer
-    uint32_t each_chunk_size[];                // User identification (SHA256)
-} header_t;
+static void write_header(std::fstream& file, selfma_ctx_t* ctx) {
+    auto projects = ctx->container->to_vector();
 
-size_t header_size(size_t num_of_chunks) {
-    return sizeof(header_t) + sizeof(uint32_t) * num_of_chunks;
-}
+    // Calculate the total size of the header including the variable-length each_chunk_size array
+    size_t header_size = sizeof(header_t) + projects.size() * sizeof(uint32_t);
+    std::vector<char> header_buffer(header_size, 0);
+    header_t* header = reinterpret_cast<header_t*>(header_buffer.data());
 
-header_t* get_header_buffer(size_t num_of_chunks) {
-    return (header_t*) qwistys_malloc(header_size(num_of_chunks), nullptr);
+    QWISTYS_TODO_MSG("Calculate the CRC of the data");
+    header->crc = 0xFFAAFFAA;  // Placeholder
+    header->version = 55555;
+    std::memcpy(header->magic, "FACA", 4);
+    header->num_of_chunks = static_cast<uint8_t>(projects.size());
+
+    // Handle user data
+    if (ctx->user_data && strlen(ctx->user_data) > 0) {
+        header->user_data_length = std::min(strlen(ctx->user_data), static_cast<size_t>(MAX_DESCRIPTION_LENGTH));
+        std::strncpy(header->user_buffer, ctx->user_data, header->user_data_length);
+    } else {
+        header->user_data_length = 0;
+    }
+
+    // Handle file name
+    std::string file_name = hash_to_file(ctx->uuid);
+    std::strncpy(header->file_name, file_name.c_str(), MAX_NAME_LENGTH - 1);
+    header->file_name[MAX_NAME_LENGTH - 1] = '\0';  // Ensure null-termination
+
+    // Fill each_chunk_size array
+    for (size_t i = 0; i < projects.size(); ++i) {
+        header->each_chunk_size[i] = projects[i]->to_vector().size();
+    }
+
+    // Write the entire header to file
+    file.write(reinterpret_cast<const char*>(header), header_size);
 }
 
 static VoidResult serialize(selfma_ctx_t* ctx) {
+    QWISTYS_TODO_MSG("TEST Serialization !!! not sure its working properly");
+    QWISTYS_TELEMETRY_START();
+
     auto ret = Ok();
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
 
-    header_t* header = nullptr;
-
-    auto projects = ctx->container->to_vector();
-
-    header = get_header_buffer(projects.size());
-    QWISTYS_ASSERT(header);
-
-    // Get the size of amount of chuns. in different How many "Project" tree you have/ and how long each "Task" tree.
-    header->num_of_chunks = projects.size();
-    for (auto i = 0; i < header->num_of_chunks; i++) {
-        auto tree = projects[i]->to_vector();
-        header->each_chunk_size[i] = tree.size();
-    }
-
-    // set header
-    strncpy(header->file_name, hash_to_file(ctx->uuid).c_str(),
-            QWISTYS_MIN(strlen(hash_to_file(ctx->uuid).c_str()), MAX_NAME_LENGTH - 1));
-    strncpy(header->user_buffer, ctx->user_data, QWISTYS_MIN(strlen(ctx->user_data), MAX_DESCRIPTION_LENGTH));
-    memcpy(header->magic, "FACA", 4);
-
     // Open/Create file
-    std::ofstream file(header->file_name, std::ios::binary | std::ios::trunc);
-    if (!file) {
-        qwistys_free(header);
+    FileGuard endpoint(hash_to_file(ctx->uuid), std::ios::binary | std::ios::out | std::ios::trunc);
+    if (!endpoint.is_open()) {
+        QWISTYS_TELEMETRY_END();
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for writing");
     }
 
-    // Write header
-    if (!file.write(reinterpret_cast<const char*>(header), header_size(header->num_of_chunks))) {
-        return Err(ErrorCode::WRITE_ERROR, "Failed to write header");
-    }
+    write_header(endpoint.get(), ctx);
 
-    // write to data
-    for (int i = 0; i < projects.size(); i++) {
-        auto task_data = projects[i]->to_vector();
+    // Write Project class data
+    auto projects = ctx->container->to_vector();
+    for (const auto& project : projects) {
+        project->self_print();
+        endpoint.get().write(reinterpret_cast<const char*>(&project->config), sizeof(Configurations));
+        
+        auto tasks = project->to_vector();
 
-        if (!file.write(reinterpret_cast<const char*>(projects[i]), sizeof(Project))) {
-            ret = Err(ErrorCode::WRITE_ERROR, "Failed to write header");
-            break;
-        }
-        for (auto task : task_data) {
-            if (!file.write(reinterpret_cast<const char*>(task), sizeof(Task))) {
-                ret = Err(ErrorCode::WRITE_ERROR, "Failed to write header");
-                break;
+        for (const auto& task : tasks) {
+            for (const auto& task : tasks) {
+                task->print();
+                endpoint.get().write(reinterpret_cast<const char*>(task), sizeof(Task));
             }
         }
     }
-    qwistys_free(header);
-    header = nullptr;
-    file.close();
+
+    QWISTYS_TELEMETRY_END();
     return ret;
 }
 
@@ -122,101 +118,67 @@ API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
     return Err(ErrorCode::INPUT, "Null ctx passed to serialization");
 }
 
-static VoidResult deserialize(selfma_ctx_t* ctx) {
-#if 0  // Read and process each chunk
+static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
+    auto ret = Ok();
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
 
-    QWISTYS_DEBUG_MSG("storage");
-    auto endpoint = hash_to_file(ctx->uuid);
-    if (!is_exist(endpoint)) {
-        return Err(ErrorCode::FILE_NOT_FOUND, "File does not exist");
-    }
-
-    std::ifstream file(endpoint, std::ios::binary);
-    if (!file) {
+    // Open file for reading
+    FileGuard endpoint(filename, std::ios::binary | std::ios::in);
+    if (!endpoint.is_open()) {
+        QWISTYS_TELEMETRY_END();
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for reading");
     }
 
-    // Read header
+    // Read and validate header
     header_t header;
-    if (!file.read(reinterpret_cast<char*>(&header), sizeof(header_t))) {
-        return Err(ErrorCode::READ_ERROR, "Failed to read header");
+    endpoint.get().read(reinterpret_cast<char*>(&header), sizeof(header_t));
+
+    if (std::memcmp(header.magic, "FACA", 4) != 0) {
+        return Err(ErrorCode::FILE_NOT_FOUND, "Invalid file format");
     }
 
-    QWISTYS_DEBUG_MSG("read to header");
-    // Verify magic number
-    if (memcmp(header.magic, "FACA", 4) != 0) {
-        return Err(ErrorCode::INVALID_FORMAT, "Invalid file format");
-    }
+    QWISTYS_TODO_MSG("Implement crc check");
+    // Read chunk sizes
+    std::vector<uint32_t> chunk_sizes(header.num_of_chunks);
+    endpoint.get().read(reinterpret_cast<char*>(chunk_sizes.data()), header.num_of_chunks * sizeof(uint32_t));
+    
+    // Read and reconstruct projects and tasks
+    for (uint8_t i = 0; i < chunk_sizes.size(); ++i) {
+        Configurations _tmp_configurations;
+        endpoint.get().read(reinterpret_cast<char*>(&_tmp_configurations), sizeof(Configurations));
+        ProjConf conf(_tmp_configurations.id, _tmp_configurations.name, _tmp_configurations.description);
+        auto project = std::make_shared<Project>(conf);
 
-    // Verify version
-    if (header.version != HEADER_VERSION) {
-        return Err(ErrorCode::VERSION_MISMATCH, "File version mismatch");
-    }
-
-    // Read chunk information
-    std::vector<chunk_info_t> chunks(header.chunk_num);
-    if (!file.read(reinterpret_cast<char*>(chunks.data()), header.chunk_num * sizeof(chunk_info_t))) {
-        return Err(ErrorCode::READ_ERROR, "Failed to read chunk info");
-    }
-
-    // Clear existing data in ctx->container
-    // ctx->container.reset(); // Not sure we need.
-    QWISTYS_DEBUG_MSG("After check");
-    for (const auto& chunk_info : chunks) {
-        // Read project data
-        // Create a new project in the container
-        Project* p = (Project*) &chunk_info.data.project;
-        ctx->container->add_project(p->config);
-        auto proj = ctx->container->get_project(p->config._id);
-
-        if (!proj) {
-            return Err(ErrorCode::MEMORY_ERROR, "Failed to create new project");
+        project->self_print();
+        for (uint32_t j = 0; j < chunk_sizes[i]; ++j) {
+            TaskConf_t config;
+            auto task = std::make_shared<Task>(&config);
+            endpoint.get().read(reinterpret_cast<char*>(task.get()), sizeof(Task));
+            task->print();
         }
 
-        // Read tasks
-        std::vector<Task> tasks(chunk_info.num_bytes / sizeof(Task));
-        if (!file.read(reinterpret_cast<char*>(tasks.data()), chunk_info.num_bytes)) {
-            return Err(ErrorCode::READ_ERROR, "Failed to read task data");
-        }
-
-        // Add tasks to the project
-        for (const auto& task : tasks) {
-            QWISTYS_TODO_MSG("Created at value will be re-init, need to change this behavior also id will change");
-            TaskConf_t conf = {0};
-            memcpy(&conf.duration, &task.duration, sizeof(Duration));
-            
-            conf.description = (char*) malloc(MAX_DESCRIPTION_LENGTH);
-            if (!conf.description) {
-                return Err(ErrorCode::MEMORY_ERROR, "malloc fail", Severity::CRITICAL);
-            }
-
-            strncpy(conf.description, task.description, MAX_DESCRIPTION_LENGTH - 1);
-            conf.description[MAX_DESCRIPTION_LENGTH - 1] = '\0';  // Ensure null-termination
-            Task t(&conf);
-            p->add(&t);
-        }
     }
 
-    // Update ctx with deserialized data
-    strncpy(ctx->uuid, header.container_id, MAX_NAME_LENGTH);
-    strncpy(ctx->user_data, header.user_buffer, MAX_DESCRIPTION_LENGTH);
-#endif
-    return Ok();
+    // Optionally, set user data if it exists
+    if (header.user_data_length > 0) {
+        memcpy(ctx->user_data, header.user_buffer, header.user_data_length);
+    }
+
+    return ret;
 }
 
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
     if (ctx) {
-        return deserialize(ctx);
+        return deserialize(hash_to_file(ctx->uuid), ctx);
     }
     return Err(ErrorCode::INPUT, "Null ctx passed to deserialization");
 }
 
 API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name, char* user_buffer) {
     selfma_ctx_t* ctx = (selfma_ctx_t*) qwistys_malloc(sizeof(selfma_ctx_t), nullptr);
-    
+
     if (ctx) {
         QWISTYS_TODO_MSG("Handle windows case, for some reason smart pointers f@cked");
         // ctx->container = std::make_unique<Container>();

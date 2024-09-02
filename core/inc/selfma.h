@@ -53,6 +53,7 @@ public:
     bool remove_task(DefaultAPI& args);
     void register_callback(uint32_t notify_id, event_callback cb) { _callbacks[notify_id] = std::move(cb); }
     bool serialize();
+    bool deserialize();
     void notify(DefaultAPI& event);
     void update();
     void evntsystem_on();

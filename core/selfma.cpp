@@ -56,7 +56,8 @@ bool Selfma::add_task(DefaultAPI& args) {
         || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
         return _error.handle_error(Err(ErrorCode::INPUT, "project_add_task: args sanity fail", Severity::LOW).error());
     }
-    if (auto ret = selfma_add_task(_ctx, args.project_id, args.name.c_str(), args.description.c_str(), args.duration); ret.is_err()) {
+    if (auto ret = selfma_add_task(_ctx, args.project_id, args.name.c_str(), args.description.c_str(), args.duration);
+        ret.is_err()) {
         return _error.handle_error(ret.error());
     }
     return true;
@@ -76,6 +77,13 @@ bool Selfma::serialize() {
     return true;
 }
 
+bool Selfma::deserialize() {
+    if (auto ret = selfma_deserialize(_ctx); ret.is_err()) {
+        return _error.handle_error(ret.error());
+    }
+    return true;
+}
+
 void Selfma::notify(DefaultAPI& event) {
     if (event.notify < NotifyCode::NOTIFY_TOTAL) {
         return _callbacks[event.notify](&event);
@@ -87,15 +95,13 @@ void Selfma::shutdown() {
     selfma_destroy(_ctx);
 }
 
-
 void Selfma::update() {
-   _wrapper(_ctx);
+    _wrapper(_ctx);
 }
 
 void Selfma::on_update_on(void* p) {
-    
     QWISTYS_TODO_MSG("Who is responsable to clear interupt ?");
-    selfma_update((selfma_ctx_t*)p);
+    selfma_update((selfma_ctx_t*) p);
 }
 
 void Selfma::evntsystem_off() {
