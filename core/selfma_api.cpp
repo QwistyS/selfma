@@ -39,7 +39,7 @@ static void write_header(std::fstream& file, selfma_ctx_t* ctx, std::vector<Proj
     QWISTYS_TODO_MSG("Calculate the CRC of the data");
     header->crc = 0xFFAAFFAA;  // Placeholder
     header->version = 55555;
-    std::memcpy(header->magic, "FACA", 4);
+    auto ret = IS_LITTLE_ENDIAN ? std::memcpy(header->magic, "face", 4) : std::memcpy(header->magic, "FACA", 4);
     header->num_of_chunks = static_cast<uint8_t>(projects.size());
 
     // Handle user data

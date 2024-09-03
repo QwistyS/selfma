@@ -13,6 +13,8 @@
 #    define STORAGE_PATH "none"
 #endif
 
+#define IS_LITTLE_ENDIAN (!!(1 & ~(~0u >> 1)))
+
 // Endianness conversion functions
 template<typename T>
 inline T to_little_endian(T value) {
