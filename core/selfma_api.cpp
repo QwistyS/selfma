@@ -134,6 +134,7 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
 
     // Create new context
     selfma_ctx_t* _tmp_ctx = selfma_create(0, header.file_name, ctx->user_data);
+    QWISTYS_ASSERT(_tmp_ctx);
 
     // Read and reconstruct projects and tasks
     for (uint8_t i = 0; i < chunk_sizes.size(); ++i) {
@@ -157,11 +158,6 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
     QWISTYS_TODO_MSG("Check if you actually can delete the old context");
     selfma_destroy(ctx);
     ctx = _tmp_ctx;
-    auto pr_test = ctx->container->to_vector();
-    for(auto p: pr_test) {
-        p->self_print();
-        p->print();
-    }
     return ret;
 }
 

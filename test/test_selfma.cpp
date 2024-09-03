@@ -107,6 +107,7 @@ void test_project_deserialize() {
     //
     QWISTYS_TODO_MSG("Before serializtion should come Merge");
     des_ctx->serialize();
-    _copy = std::move(des_ctx);
+    // should come copy.
     TEST_ASSERT(des_ctx->deserialize());
+    des_ctx.release();
 }
