@@ -10,21 +10,12 @@
 #include "qwistys_avltree.h"
 #include "task.h"
 
-static void task_on_tree(void* t) {
-    Task* task = (Task*) t;
-    if (task->update()) {
-        task->print();
-        task->timer.set(1);
-    }
-    // here should generate resoponce.
-}
-
 class ProjConf final {
 public:
     explicit ProjConf(uint32_t id, const std::string& name, const std::string& description)
         : _id(id), _name(name), _description(description), _created_at(0) {
         time(&_created_at);
-    }
+   }
 
     // Copy constructor
     ProjConf(const ProjConf& other)
@@ -62,7 +53,6 @@ public:
     time_t _created_at;
 };
 
-
 struct PACKED_STRUCT ProjectConfigurations {
     uint32_t id;
     char name[MAX_NAME_LENGTH];
@@ -98,25 +88,19 @@ public:
     // Get pointer to Task after finding it by id, NULL in case not exist
     Task* get_task(uint32_t id);
     uint32_t get_self_id();
-    void self_print();
     // Here should come the ruotin we want to call on thread.
-    void worker() {
-        // scan for stuff to notify about.
-        avlt_in_order(_root, task_on_tree);
-    }
-    // For debug ussage.
-    VoidResult print();
+    void worker();
     void clean();
 
+    // For debug ussage.
+    VoidResult print();
+    void self_print();
+
 private:
-    // if needed some stuff @ ctor time.
     void _init();
-    // RAII Stuff
-    // Get task by node id which is in this case Task structure
     Task* _get_task(avlt_node_t* node, uint32_t task_id);
     uint32_t _cunter;  // :D and yes its a mistake that would leave here forever
     ErrorHandler _error;
-    // The main root node of Task's tree
     avlt_node_t* _root;
     DisasterRecoveryPlan _drp;
     IDs _id;

@@ -23,6 +23,15 @@ bool Selfma::_handle_add_project() {
     return false;
 }
 
+inline VoidResult check_args(const DefaultAPI& args) {
+    if ((args.name.size() == 0 || args.description.size() == 0)
+        || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
+        return Err(ErrorCode::INPUT, "project_add: args sanity fail", Severity::LOW);
+    }
+    return Ok();
+}
+
+
 /* End of Handlers */
 
 void Selfma::_setup_drp() {
@@ -32,9 +41,8 @@ void Selfma::_setup_drp() {
 }
 
 bool Selfma::add_project(const DefaultAPI& args) {
-    if ((args.name.size() == 0 || args.description.size() == 0)
-        || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
-        return _error.handle_error(Err(ErrorCode::INPUT, "project_add: args sanity fail", Severity::LOW).error());
+    if (auto ret = check_args(args); ret.is_err()) {
+        return _error.handle_error(ret.error());
     }
 
     if (auto ret = selfma_add_project(_ctx, args.name, args.description); ret.is_err()) {
@@ -45,6 +53,10 @@ bool Selfma::add_project(const DefaultAPI& args) {
 }
 
 bool Selfma::remove_project(DefaultAPI& args) {
+    if (auto ret = check_args(args); ret.is_err()) {
+        return _error.handle_error(ret.error());
+    }
+
     if (auto ret = selfma_remove_project(_ctx, args.project_id); ret.is_err()) {
         return _error.handle_error(ret.error());
     }
@@ -52,9 +64,8 @@ bool Selfma::remove_project(DefaultAPI& args) {
 }
 
 bool Selfma::add_task(DefaultAPI& args) {
-    if ((args.name.size() == 0 || args.description.size() == 0)
-        || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
-        return _error.handle_error(Err(ErrorCode::INPUT, "project_add_task: args sanity fail", Severity::LOW).error());
+    if (auto ret = check_args(args); ret.is_err()) {
+        return _error.handle_error(ret.error());
     }
     if (auto ret = selfma_add_task(_ctx, args.project_id, args.name.c_str(), args.description.c_str(), args.duration);
         ret.is_err()) {

@@ -4,11 +4,17 @@
 
 #include "error_handler.h"
 #include "project.h"
-#include "qwistys_avltree.h"
-#include "qwistys_macros.h"
 
 /** Callbacks for avl tree for Project to task */
-static int _compare(void* t, void* t2) {
+static void task_on_tree(void* t) {
+    Task* task = (Task*) t;
+    if (task->update()) {
+        task->print();
+        task->timer.set(1);
+    // here should generate resoponce.
+}
+
+}static int _compare(void* t, void* t2) {
     avlt_node_t* first = (avlt_node_t*) t;
     avlt_node_t* second = (avlt_node_t*) t2;
 
@@ -74,6 +80,11 @@ VoidResult Project::remove(Task* t) {
 
 Task* Project::get_task(uint32_t id) {
     return _get_task(_root, id);
+}
+
+void Project::worker() {
+        // scan for stuff to notify about.
+        avlt_in_order(_root, task_on_tree);
 }
 
 std::vector<Task*> Project::to_vector() {
