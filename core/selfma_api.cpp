@@ -64,6 +64,17 @@ static void write_header(std::fstream& file, selfma_ctx_t* ctx, std::vector<Proj
     file.write(reinterpret_cast<const char*>(header), header_size);
 }
 
+static void write_data(std::fstream& file, std::vector<Project*>& projects) {
+    // Write Project class data
+    for (auto& project : projects) {
+        file.write(reinterpret_cast<const char*>(&project->config), sizeof(ProjectConfigurations));
+        auto tasks = project->to_vector();
+        for (const auto& task : tasks) {
+            file.write(reinterpret_cast<const char*>(task), sizeof(Task));
+        }
+    }
+}
+
 static VoidResult serialize(selfma_ctx_t* ctx) {
     QWISTYS_TODO_MSG("TEST Serialization !!! not sure its working properly");
     QWISTYS_TELEMETRY_START();
@@ -82,21 +93,9 @@ static VoidResult serialize(selfma_ctx_t* ctx) {
 
     auto projects = ctx->container->to_vector();
     write_header(endpoint.get(), ctx, projects);
-
-    // Write Project class data
-    for (auto& project : projects) {
-        endpoint.get().write(reinterpret_cast<const char*>(&project->config), sizeof(ProjectConfigurations));
-        auto tasks = project->to_vector();
-        for (const auto& task : tasks) {
-            endpoint.get().write(reinterpret_cast<const char*>(task), sizeof(Task));
-        }
-    }
+    write_data(endpoint.get(), projects);
 
     QWISTYS_TELEMETRY_END();
-    // for (auto p : projects) {
-    //     p->print();
-    // }
-
     return ret;
 }
 
@@ -155,14 +154,10 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
         memcpy(ctx->user_data, header.user_buffer, header.user_data_length);
     }
 
-    QWISTYS_TODO_MSG("Check if you actually can delet the old context");
+    QWISTYS_TODO_MSG("Check if you actually can delete the old context");
     selfma_destroy(ctx);
     ctx = _tmp_ctx;
     auto pr_test = ctx->container->to_vector();
-    for (auto p : pr_test) {
-        p->self_print();
-        // p->print();
-    }
     return ret;
 }
 
