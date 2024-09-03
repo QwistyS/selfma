@@ -158,6 +158,10 @@ static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
     selfma_destroy(ctx);
     ctx = _tmp_ctx;
     auto pr_test = ctx->container->to_vector();
+    for(auto p: pr_test) {
+        p->self_print();
+        p->print();
+    }
     return ret;
 }
 

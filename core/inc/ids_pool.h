@@ -7,11 +7,6 @@
 #include "qwistys_stack.h"
 
 class IDs {
-private:
-    uint32_t _next;
-    qwistys_stack_t* _stack;
-    uint32_t _max_ids;
-
 public:
     IDs(uint32_t max_ids = std::numeric_limits<uint32_t>::max()) : _next(0), _stack(nullptr), _max_ids(max_ids) {}
 
@@ -24,10 +19,8 @@ public:
         return Err(ErrorCode::ALLOCATION_FAIL, "Failed to allocate memory for stack", Severity::MEDIUM);
     }
 
-    uint32_t max() {
-        return _max_ids;
-    }
-    
+    uint32_t max() { return _max_ids; }
+
     VoidResult clean() {
         if (_stack) {
             qwistys_stack_free(_stack);
@@ -65,6 +58,11 @@ public:
     }
 
     uint32_t available_ids() const { return _max_ids - (_next - qwistys_stack_size(_stack)); }
+
+private:
+    uint32_t _next;
+    qwistys_stack_t* _stack;
+    uint32_t _max_ids;
 };
 
 #endif  // SELFMA_IDS_POOL_H

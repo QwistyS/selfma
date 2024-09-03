@@ -1,6 +1,4 @@
 #include "selfma.h"
-#include "error_handler.h"
-#include "qwistys_macros.h"
 #include "selfma_api.h"
 #include "task.h"
 
@@ -30,8 +28,6 @@ inline VoidResult check_args(const DefaultAPI& args) {
     }
     return Ok();
 }
-
-
 /* End of Handlers */
 
 void Selfma::_setup_drp() {
