@@ -5,6 +5,7 @@
 #include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
+#include "selfma.h"
 
 /** Callback for avl tree Sort by Project type */
 static int _comp(void* a, void* b) {
@@ -147,6 +148,6 @@ VoidResult Container::add_task(uint32_t project_id, Task* task) {
     return project->add(task);
 }
 
-void Container::update() {
-    avlt_in_order(_root, _update);    
+void Container::update(void *cbs) {
+    avlt_in_order(_root, _update, cbs);
 }

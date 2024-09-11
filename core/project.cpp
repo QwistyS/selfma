@@ -84,6 +84,7 @@ Task* Project::get_task(uint32_t id) {
 
 void Project::worker() {
         // scan for stuff to notify about.
+        self_print();
         avlt_in_order(_root, task_on_tree);
 }
 

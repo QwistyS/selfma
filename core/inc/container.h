@@ -19,7 +19,7 @@ public:
     VoidResult remove_task(uint32_t project_id, uint32_t task_id);
     Project* get_project(uint32_t id);
     std::vector<Project*> to_vector();
-    void update();
+    void update(void *cbs);
     uint32_t size();
 
 private:

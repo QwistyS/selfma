@@ -19,7 +19,7 @@ API_SELFMA VoidResult selfma_add_task(selfma_ctx_t* ctx, uint32_t project_id, co
 API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id, uint32_t task_id);
 API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx);
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx);
-API_SELFMA void selfma_update(selfma_ctx_t* ctx);
+API_SELFMA void selfma_update(selfma_ctx_t* ctx, void* cbs);
 
 //  Optional, created, not connected yet.
 API_SELFMA void selfma_print(selfma_ctx_t* ctx);

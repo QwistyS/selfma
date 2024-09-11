@@ -89,7 +89,7 @@ public:
     Task* get_task(uint32_t id);
     uint32_t get_self_id();
     // Here should come the ruotin we want to call on thread.
-    void worker();
+    void worker(void* e);
     void clean();
 
     // For debug ussage.
