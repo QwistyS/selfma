@@ -1,20 +1,26 @@
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "error_handler.h"
 #include "project.h"
+#include "task.h"
 
-/** Callbacks for avl tree for Project to task */
-static void task_on_tree(void* t, void *e) {
+static void task_on_tree(void* t, void* e) {
     Task* task = (Task*) t;
     if (task->update()) {
-        task->print();
         task->timer.set(1);
-    // here should generate resoponce.
+        DefaultAPI event = {};
+        auto callbacks = (std::array<event_callback, NotifyCode::NOTIFY_TOTAL>*)e;
+        auto cb = (*callbacks)[NotifyCode::TASK_TIME_ELAPSED];
+        if (cb) {
+            cb(&event);
+        }
+    }
 }
 
-}static int _compare(void* t, void* t2) {
+static int _compare(void* t, void* t2) {
     avlt_node_t* first = (avlt_node_t*) t;
     avlt_node_t* second = (avlt_node_t*) t2;
 
@@ -82,10 +88,9 @@ Task* Project::get_task(uint32_t id) {
     return _get_task(_root, id);
 }
 
-void Project::worker(void *e) {
-        // scan for stuff to notify about.
-        self_print();
-        avlt_in_order(_root, task_on_tree, e);
+void Project::worker(void* e) {
+    // scan for stuff to notify about.
+    avlt_in_order(_root, task_on_tree, e);
 }
 
 std::vector<Task*> Project::to_vector() {

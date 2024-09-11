@@ -23,6 +23,27 @@
 #define MAX_DESCRIPTION_LENGTH 1024
 #define MAX_NAME_LENGTH (MAX_DESCRIPTION_LENGTH / 4)
 
+// Like a command thing. can be staticly allocated for single reff,
+// on each req pass this structure
+struct DefaultAPI {
+    std::string name;
+    std::string description;
+    uint32_t project_id;
+    uint32_t task_id;
+    double duration;
+    uint32_t notify;
+};
+
+enum NotifyCode { 
+    EVENT_MAX_TIME_SLEEP = 0,
+    TASK_TIME_ELAPSED,
+    NOTIFY_TOTAL,
+};
+
+typedef void (*event_callback)(DefaultAPI*);
+/** Callbacks for avl tree for Project to task */
+
+
 static void copy_strchar(const std::string& src, char* buffer, size_t MAX_DEFINES) {
     auto view = std::string_view(src);
     auto length = QWISTYS_MIN(view.length(), MAX_DEFINES - 1);

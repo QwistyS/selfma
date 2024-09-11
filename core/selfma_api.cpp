@@ -184,7 +184,6 @@ API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name
 API_SELFMA void selfma_destroy(selfma_ctx_t* ctx) {
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
-        // ctx->container.reset();
         delete ctx->container;
         qwistys_free(ctx);
     }
@@ -238,7 +237,7 @@ API_SELFMA void selfma_print(selfma_ctx_t* ctx) {
     };
 }
 
-API_SELFMA void selfma_update(selfma_ctx_t* ctx, void *cbs) {
+API_SELFMA void selfma_update(selfma_ctx_t* ctx, void* cbs) {
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
         ctx->container->update(cbs);

@@ -1,37 +1,14 @@
 #ifndef SELFMA_SELFMA_H
 #define SELFMA_SELFMA_H
 
-#include <array>
-#include <cstdint>
+#include "task.h"
 #include "error_handler.h"
 #include "selfma_api.h"
-
-void nop_stub(void* p);
-
-// Like a command thing. can be staticly allocated for single reff,
-// on each req pass this structure
-struct DefaultAPI {
-    std::string name;
-    std::string description;
-    uint32_t project_id;
-    uint32_t task_id;
-    double duration;
-    uint32_t notify;
-};
-
-enum NotifyCode { 
-    NOTIFY_OK = 0,
-    EVENT_MAX_TIME_SLEEP,
-    NOTIFY_TOTAL,
-};
-
-typedef void (*event_callback)(DefaultAPI*);
-typedef void(*wrapper)(void*);
 
 // Core Lib wrapper to c++
 class Selfma final {
 public:
-    Selfma(const std::string& file_name, char* buffer) : _error(_drp), _wrapper(&nop_stub) {
+    Selfma(const std::string& file_name, char* buffer) : _error(_drp), _wrapper(&Selfma::nop_stub) {
         _ctx = selfma_create(0, file_name, buffer);
         if (!_ctx) {
             auto e = Error(ErrorCode::MEMORY_ERROR, "Fail to create context", Severity::CRITICAL);
@@ -51,7 +28,7 @@ public:
     bool add_task(DefaultAPI& args);
     bool remove_project(DefaultAPI& args);
     bool remove_task(DefaultAPI& args);
-    void register_callback(uint32_t notify_id, event_callback cb) { _callbacks[notify_id] = std::move(cb); }
+    void register_callback(NotifyCode notify_id, event_callback cb);
     bool serialize();
     bool deserialize();
     void notify(DefaultAPI& event);
@@ -71,7 +48,9 @@ private:
     bool _handle_add_project();
     void on_update_on(void* p);
     void on_update_off(void* p);
-    wrapper _wrapper;
+    void nop_stub(void* p);
+    typedef void (Selfma::*WrapperFunc)(void*);
+    WrapperFunc _wrapper;
 
 };
 

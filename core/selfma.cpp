@@ -4,9 +4,6 @@
 
 /* Handlers*/
 
-void nop_stub(void* p) {
-}
-
 bool Selfma::_handle_mem() {
     // Unrecoverable
     return false;
@@ -103,18 +100,26 @@ void Selfma::shutdown() {
 }
 
 void Selfma::update() {
-    _wrapper(_ctx);
+    (this->*_wrapper)(_ctx);
 }
 
 void Selfma::on_update_on(void* p) {
-    QWISTYS_TODO_MSG("Who is responsable to clear interupt ?");
     selfma_update((selfma_ctx_t*) p, &_callbacks);
 }
 
+void Selfma::nop_stub(void* p) {
+    void(0);
+}
+
+
 void Selfma::evntsystem_off() {
-    _wrapper = &nop_stub;
+    _wrapper = &Selfma::nop_stub;
 }
 
 void Selfma::evntsystem_on() {
-    _wrapper = &Selfma::wrapper_on_update_on;
+    _wrapper = &Selfma::on_update_on;
+}
+
+void Selfma::register_callback(NotifyCode notify_id, event_callback cb) {
+    _callbacks[notify_id] = std::move(cb);
 }

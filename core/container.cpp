@@ -19,9 +19,9 @@ static void _print(void* a) {
     pa->print();
 }
 
-static void _update(void* p, void *e) {
-    Project* project = (Project*)p;
-    project = nullptr;
+static void _update(void* p, void* e) {
+    Project* project = (Project*) p;
+    project->worker(e);
 }
 
 static void _del(void* p) {
@@ -146,6 +146,7 @@ VoidResult Container::add_task(uint32_t project_id, Task* task) {
     return project->add(task);
 }
 
-void Container::update(void *cbs) {
+void Container::update(void* cbs) {
     avlt_in_order(_root, _update, cbs);
+
 }

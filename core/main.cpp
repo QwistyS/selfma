@@ -48,6 +48,7 @@ void on_event(DefaultAPI* data) {
 int main() {
 
     auto selfma = std::make_unique<Selfma>("File", nullptr);
+    selfma->evntsystem_on();
     // Somehow get the file
     // launch the app
     
@@ -83,7 +84,7 @@ int main() {
 
     msgs.push(msg);
     msgs.push(msg1);
-    selfma->evntsystem_on();
+
     
     while (earth_is_spinning) {
         SelfmaMsg msg;
