@@ -5,7 +5,6 @@
 #include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
-#include "selfma.h"
 
 /** Callback for avl tree Sort by Project type */
 static int _comp(void* a, void* b) {
@@ -20,9 +19,8 @@ static void _print(void* a) {
     pa->print();
 }
 
-static void _update(void* p) {
+static void _update(void* p, void *e) {
     Project* project = (Project*)p;
-    project->worker();
     project = nullptr;
 }
 

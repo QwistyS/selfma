@@ -108,7 +108,7 @@ void Selfma::update() {
 
 void Selfma::on_update_on(void* p) {
     QWISTYS_TODO_MSG("Who is responsable to clear interupt ?");
-    selfma_update((selfma_ctx_t*) p);
+    selfma_update((selfma_ctx_t*) p, &_callbacks);
 }
 
 void Selfma::evntsystem_off() {

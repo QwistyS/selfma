@@ -6,7 +6,7 @@
 #include "project.h"
 
 /** Callbacks for avl tree for Project to task */
-static void task_on_tree(void* t) {
+static void task_on_tree(void* t, void *e) {
     Task* task = (Task*) t;
     if (task->update()) {
         task->print();
@@ -82,10 +82,10 @@ Task* Project::get_task(uint32_t id) {
     return _get_task(_root, id);
 }
 
-void Project::worker() {
+void Project::worker(void *e) {
         // scan for stuff to notify about.
         self_print();
-        avlt_in_order(_root, task_on_tree);
+        avlt_in_order(_root, task_on_tree, e);
 }
 
 std::vector<Task*> Project::to_vector() {

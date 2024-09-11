@@ -238,9 +238,9 @@ API_SELFMA void selfma_print(selfma_ctx_t* ctx) {
     };
 }
 
-API_SELFMA void selfma_update(selfma_ctx_t* ctx) {
+API_SELFMA void selfma_update(selfma_ctx_t* ctx, void *cbs) {
     if (ctx) {
         QWISTYS_ASSERT(ctx->container);
-        ctx->container->update();
+        ctx->container->update(cbs);
     }
 }
