@@ -3,6 +3,7 @@
 
 #include "error_handler.h"
 #include "stdint.h"
+#include <cstdint>
 #include <string>
 
 typedef struct selfma_opq selfma_ctx_t;
@@ -20,7 +21,7 @@ API_SELFMA VoidResult selfma_remove_task(selfma_ctx_t* ctx, uint32_t project_id,
 API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx);
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx);
 API_SELFMA void selfma_update(selfma_ctx_t* ctx, void* cbs);
-
+API_SELFMA void* selfma_get_project(selfma_ctx_t* ctx, uint32_t project_id);
 //  Optional, created, not connected yet.
 API_SELFMA void selfma_print(selfma_ctx_t* ctx);
 

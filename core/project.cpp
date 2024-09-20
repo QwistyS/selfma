@@ -5,6 +5,7 @@
 
 #include "error_handler.h"
 #include "project.h"
+#include "qwistys_macros.h"
 #include "task.h"
 
 static void task_on_tree(void* t, void* e) {
@@ -61,8 +62,10 @@ void Project::_init() {
 }
 
 void Project::clean() {
+    QWISTYS_DEBUG_MSG("In project clean");
     if (_root) {
         avlt_free_tree(_root, _delet);
+        QWISTYS_DEBUG_MSG("Project %d cleared", get_self_id());
         _root = nullptr;
     }
     _cunter = 0;

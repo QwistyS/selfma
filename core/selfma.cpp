@@ -1,4 +1,6 @@
 #include "selfma.h"
+#include <cstdint>
+#include "project.h"
 #include "selfma_api.h"
 #include "task.h"
 
@@ -56,6 +58,28 @@ bool Selfma::remove_project(DefaultAPI& args) {
     return true;
 }
 
+std::vector<DefaultAPI> Selfma::projects_to_vec() {
+    std::vector<DefaultAPI> result;
+    Project* proj = nullptr;
+    uint32_t ids = 0;
+    while(true) {
+        proj = (Project*) selfma_get_project(_ctx, ids++);
+        if (!proj) {
+            break;
+        }
+
+        result.push_back({
+                             .name = proj->config.name,
+                             .description = proj->config.description,
+                             .project_id = proj->config.id,
+                         });
+        
+    }
+    proj = nullptr;
+    
+    return result;
+}
+
 bool Selfma::add_task(DefaultAPI& args) {
     if (auto ret = check_args(args); ret.is_err()) {
         return _error.handle_error(ret.error());
@@ -110,7 +134,6 @@ void Selfma::on_update_on(void* p) {
 void Selfma::nop_stub(void* p) {
     void(0);
 }
-
 
 void Selfma::evntsystem_off() {
     _wrapper = &Selfma::nop_stub;

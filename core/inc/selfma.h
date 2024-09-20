@@ -28,6 +28,7 @@ public:
     bool add_task(DefaultAPI& args);
     bool remove_project(DefaultAPI& args);
     bool remove_task(DefaultAPI& args);
+    std::vector<DefaultAPI> projects_to_vec();
     void register_callback(NotifyCode notify_id, event_callback cb);
     bool serialize();
     bool deserialize();
