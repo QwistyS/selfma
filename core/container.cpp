@@ -88,12 +88,18 @@ VoidResult Container::add_project(ProjConf& config) {
 }
 
 VoidResult Container::remove_project(uint32_t project_id) {
+    if(_element_counter == 0) {
+        return Ok();
+    }
     Project* delete_candidate = get_project_by_id(_root, project_id);
 
     if (delete_candidate) {
         avlt_delete(_root, delete_candidate, _comp, _del);
         _id.release(project_id);
         _element_counter--;
+        if(_element_counter == 0) {
+            _root = nullptr;
+        }
         QWISTYS_TODO_MSG("Clear the Task tree in project before releasing it");
         return Ok();
     }

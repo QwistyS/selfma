@@ -18,7 +18,17 @@ void test_container_add_project() {
     container.get()->add_project(conf);
     TEST_ASSERT(container.get()->size() == 1);
 }
-void test_container_remove_project() {}
+void test_container_remove_project() {
+    ProjConf c(1, "new", "new");
+    container->add_project(c);
+    int count = container->to_vector().size();
+    TEST_ASSERT(count > 0);
+    container->remove_project(0);
+    count = container->to_vector().size();
+    
+    TEST_ASSERT(count == 0);
+    
+}
 void test_container_add_task() {}
 void test_container_remove_task() {}
 void test_container_get_project() {}
