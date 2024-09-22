@@ -5,6 +5,6 @@
 - test ok.
 
 # General stuff to fix
-  ## Not urgent good to have
-  [] Need to add a generic class "AVL Tree" on concept type and remove project + container same implementation.
-  [] Need to profile it
+## Not urgent good to have
+  - [] Need to add a generic class "AVL Tree" on concept type and remove project + container same implementation.
+  - [] Need to profile it
