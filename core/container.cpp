@@ -4,10 +4,13 @@
 #include "error_handler.h"
 #include "iostream"
 #include "project.h"
+#include "qwistys_alloc.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
+
 /** Callback for avl tree Sort by Project type */
 static int _comp(void* a, void* b) {
+    if(!a || !b ) return 1;
     Project* pa = (Project*) a;
     Project* pb = (Project*) b;
     if (pa->get_self_id() < pb->get_self_id())
@@ -77,22 +80,46 @@ void Container::_clean() {
     _id.clean();
 }
 
+inline avlt_node_t* find_rightmost_node(avlt_node_t* node) {
+    if (!node) return nullptr;
+    while (node->right) {
+        node = node->right;
+    }
+    return node;
+}
+
+
 VoidResult Container::add_project(ProjConf& config) {
     // Set id to config before writing the object to tree
     auto new_id = _id.next();
     if (new_id.is_err()) {
-        return Err(ErrorCode::ADD_PROJECT_FAIL, "Fail to add poject generate id fail");
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Fail to add project generate id fail");
     }
     config._id = new_id.value();
+    Project* dummy = (Project*)qwistys_malloc(sizeof(Project), nullptr);
+    if (!dummy) {
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed to find inserted node");
+    }
+    
+    dummy->config.id = config._id;
+    // Allocate memory in the tree
+    _root = avlt_insert(_root, dummy, sizeof(Project), _comp);
+    if (!_root) {
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed to allocate memory in tree");
+    }
 
-    // Create object with configurations safe and secure ;)
-    Project p(config);
-    // Copy data to tree
-    _root = avlt_insert(_root, &p, sizeof(Project), _comp);
+    auto mem = get_project_by_id(_root, config._id);
+    if (!mem) {
+    }
+    // Construct the Project object in the allocated memory
+    
+    Project* pp = new ((void*)mem) Project(config);
+    qwistys_free(dummy);
     _element_counter++;
-    QWISTYS_DEBUG_MSG("Project {%s} added successful", p.config.name);
+    QWISTYS_DEBUG_MSG("Project {%s} added successful", pp->config.name);
     return Ok();
 }
+
 VoidResult Container::remove_project(uint32_t project_id) {
     if (!_root || _element_counter == 0) {
         QWISTYS_DEBUG_MSG("Nothing to clear ...");

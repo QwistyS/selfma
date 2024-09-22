@@ -82,6 +82,7 @@ public:
         // however, for test purpeses we do use dtor to validate we clear all sub trees
         // If you want to free this object call clean() not from dtorc and delete callback on avl
         clean();
+        _id.clean();
     }
 
     // get size of current ammount of elements in total in the tree. __NOTE__ : not related to id's.

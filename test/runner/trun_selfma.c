@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "unity_internals.h"
+#include "qwistys_alloc.h"
 
 extern void setUp();
 extern void tearDown();
@@ -20,6 +21,6 @@ int main(void) {
     RUN_TEST(test_project_remove);
     RUN_TEST(test_project_serialize);
     RUN_TEST(test_project_deserialize);
-
+    qwistys_print_memory_stats();
     return (UnityEnd());
 }

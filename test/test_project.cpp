@@ -15,6 +15,7 @@ void setUp() {
 }
 
 void tearDown() {
+    project->clean();
     project.reset();
 }
 
@@ -24,10 +25,6 @@ void test_project_ctor() {
     TEST_ASSERT_EQUAL_STRING(project->config.name, "Test");
     TEST_ASSERT_EQUAL_STRING(project->config.description, "Test");
 
-}
-
-void test_project_dtor() {
-    QWISTYS_TODO_MSG("Tested each time tearDown is called");
 }
 
 void test_project_get_size() {

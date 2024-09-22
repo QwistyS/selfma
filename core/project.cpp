@@ -76,9 +76,9 @@ void Project::clean() {
         QWISTYS_DEBUG_MSG("Cleaning project %d...", config.id);
         avlt_free_tree(_root, _delet);
         _cunter = 0;
-        _id.clean();
-        _root = nullptr;
     }
+    _root = nullptr;
+    _id.clean();
 }
 
 uint32_t Project::size() {
