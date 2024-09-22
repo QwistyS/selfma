@@ -1,23 +1,23 @@
 #ifndef SELFMA_TASK_H
 #define SELFMA_TASK_H
 
+#include <time.h>
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <string>
 #include <cstring>
-#include <algorithm>
+#include <string>
 #include <string_view>
-#include <time.h>
 #include "qwistys_macros.h"
 
 // to support any archtechure
 #ifdef USE_GNU_PACKED_ATTRIBUTE
-    #define PACKED_STRUCT __attribute__((packed))
+#    define PACKED_STRUCT __attribute__((packed))
 #elif defined(USE_MSVC_PRAGMA_PACK)
-    #define PACKED_STRUCT
-    #pragma pack(push, 1)
+#    define PACKED_STRUCT
+#    pragma pack(push, 1)
 #else
-    #define PACKED_STRUCT
+#    define PACKED_STRUCT
 #endif
 
 #define MAX_DESCRIPTION_LENGTH 1024
@@ -32,9 +32,17 @@ struct DefaultAPI {
     uint32_t task_id;
     double duration;
     uint32_t notify;
+    DefaultAPI(const char* n, const char* desc, uint32_t proj_id, uint32_t tasks, int dur, int notif)
+        : name(n), description(desc), project_id(proj_id), task_id(tasks), duration(dur), notify(notif) {}
+    DefaultAPI(const char* n, const char* desc, uint32_t proj_id)
+        : name(n), description(desc), project_id(proj_id) {}
+    DefaultAPI(const char* n, const char* desc, uint32_t proj_id, uint32_t task_id)
+        : name(n), description(desc), project_id(proj_id), task_id(task_id) {}
+    DefaultAPI() = default;
+    DefaultAPI& operator=(const DefaultAPI& other) = default;
 };
 
-enum NotifyCode { 
+enum NotifyCode {
     EVENT_MAX_TIME_SLEEP = 0,
     TASK_TIME_ELAPSED,
     NOTIFY_TOTAL,
@@ -42,7 +50,6 @@ enum NotifyCode {
 
 typedef void (*event_callback)(DefaultAPI*);
 /** Callbacks for avl tree for Project to task */
-
 
 static void copy_strchar(const std::string& src, char* buffer, size_t MAX_DEFINES) {
     auto view = std::string_view(src);
@@ -58,14 +65,9 @@ private:
     bool finished;
 
 public:
-    Timer(double seconds)
-        : start_time(std::chrono::steady_clock::now()),
-          duration(seconds),
-          finished(false) {}
+    Timer(double seconds) : start_time(std::chrono::steady_clock::now()), duration(seconds), finished(false) {}
 
-    bool is_finished() const {
-        return finished;
-    }
+    bool is_finished() const { return finished; }
 
     void update() {
         if (!finished) {
@@ -81,9 +83,10 @@ public:
         finished = false;
         start_time = std::chrono::steady_clock::now();
     }
-    
+
     double get_remaining_time() const {
-        if (finished) return 0.0;
+        if (finished)
+            return 0.0;
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration<double>(now - start_time);
         return QWISTYS_MAX(0.0, duration.count() - elapsed.count());
@@ -111,7 +114,7 @@ struct PACKED_STRUCT Task {
         timer.update();
         return timer.is_finished();
     }
-    
+
     void print() {
         fprintf(stderr, "-------- Task %d --------\n", id);
         fprintf(stderr, "-\t desc [%s]\n", description);
@@ -121,7 +124,7 @@ struct PACKED_STRUCT Task {
     }
 };
 #ifdef USE_MSVC_PRAGMA_PACK
-    #pragma pack(pop)
+#    pragma pack(pop)
 #endif
 
 #endif  // SELFMA_TASK_H

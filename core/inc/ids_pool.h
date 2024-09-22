@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <limits>
 #include "error_handler.h"
+#include "qwistys_macros.h"
 #include "qwistys_stack.h"
 
 class IDs {
@@ -25,8 +26,9 @@ public:
         if (_stack) {
             qwistys_stack_free(_stack);
             _stack = nullptr;
+            _next = 0;
+            QWISTYS_DEBUG_MSG("ID client cleared");
         }
-        _next = 0;
         return Ok();
     }
 

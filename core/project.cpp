@@ -69,7 +69,7 @@ void Project::_init() {
 }
 
 void Project::clean() {
-    if (_root) {
+    if (_root && _cunter) {
         QWISTYS_DEBUG_MSG("Cleaning project %d...", config.id);
         avlt_free_tree(_root, _delet);
         _cunter = 0;
@@ -87,6 +87,9 @@ uint32_t Project::get_self_id() {
 }
 
 VoidResult Project::remove(Task* t) {
+    if (_cunter == 0) {
+        return Ok();
+    }
     avlt_delete(_root, t, _compare, _delet);
     _id.release(t->id);
     _cunter--;

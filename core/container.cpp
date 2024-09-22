@@ -93,6 +93,7 @@ VoidResult Container::add_project(ProjConf& config) {
 }
 VoidResult Container::remove_project(uint32_t project_id) {
     if (!_root || _element_counter == 0) {
+        QWISTYS_DEBUG_MSG("Nothing to clear ...");
         return Ok();
     }
 

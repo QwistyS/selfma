@@ -172,8 +172,6 @@ API_SELFMA selfma_ctx_t* selfma_create(uint32_t id, const std::string& file_name
     selfma_ctx_t* ctx = (selfma_ctx_t*) qwistys_malloc(sizeof(selfma_ctx_t), nullptr);
 
     if (ctx) {
-        QWISTYS_TODO_MSG("Handle windows case, for some reason smart pointers f@cked");
-        // ctx->container = std::make_unique<Container>();
         ctx->container = new Container();
         copy_strchar(file_name, ctx->uuid, MAX_NAME_LENGTH);
         ctx->user_data = user_buffer;
@@ -243,7 +241,6 @@ API_SELFMA void* selfma_get_project(selfma_ctx_t* ctx, uint32_t project_id) {
     }
     return nullptr;
 }
-
 
 API_SELFMA void selfma_update(selfma_ctx_t* ctx, void* cbs) {
     if (ctx) {

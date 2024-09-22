@@ -1,6 +1,7 @@
 #include "selfma.h"
 #include <cstdint>
 #include "project.h"
+#include "qwistys_macros.h"
 #include "selfma_api.h"
 #include "task.h"
 
@@ -60,23 +61,24 @@ bool Selfma::remove_project(DefaultAPI& args) {
 
 std::vector<DefaultAPI> Selfma::projects_to_vec() {
     std::vector<DefaultAPI> result;
+    result.reserve(10);
     Project* proj = nullptr;
     uint32_t ids = 0;
-    while(true) {
+    while (true) {
         proj = (Project*) selfma_get_project(_ctx, ids++);
         if (!proj) {
             break;
         }
 
-        result.push_back({
-                             .name = proj->config.name,
-                             .description = proj->config.description,
-                             .project_id = proj->config.id,
-                         });
-        
+        result.emplace_back(proj->config.name,
+                            proj->config.description,
+                            proj->config.id,
+                        proj->size(),
+                    0, 0);
     }
     proj = nullptr;
-    
+    QWISTYS_DEBUG_MSG("Size of array %d", result.size());
+
     return result;
 }
 

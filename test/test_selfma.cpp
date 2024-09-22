@@ -1,9 +1,8 @@
 #include <cassert>
-#include <cstdint>
 #include <memory>
 #include <string>
-#include "qwistys_macros.h"
 #include "selfma.h"
+#include "task.h"
 #include "unity.h"
 
 const std::string db_path = STORAGE_PATH "/user_file.hash";
@@ -22,8 +21,7 @@ void setUp() {
 }
 
 void tearDown() {
-    auto none = selfma.release();
-    selfma = nullptr;
+    selfma.reset();
 }
 
 void test_project_add_args() {
@@ -56,20 +54,20 @@ void test_project_add_task() {
     TEST_ASSERT(selfma->add_task(proj) == true);
 }
 
+void test_project_remove_task() {
+    DefaultAPI remove_task = {"Project Name Project Name", "RAMEN", 0, 0};
+    TEST_ASSERT(selfma->remove_task(remove_task));
+}
+
 void test_project_remove() {
-    // push few items
     DefaultAPI proj{
         "Project Name Project Name",
         "RAMEN",
         0,
         0,
     };
-
-    selfma->add_project(proj);
-
-    TEST_ASSERT(selfma->remove_project(proj) == true);
-    // True in case when project not exist, still means deleted.
-    TEST_ASSERT(selfma->remove_project(proj) == true);
+    TEST_ASSERT(selfma->remove_project(proj));
+    TEST_ASSERT(selfma->remove_project(proj));
 }
 
 void test_project_serialize() {
@@ -82,7 +80,7 @@ void test_project_serialize() {
 
     for (uint32_t projects_size = 0; projects_size < 6; projects_size++) {
         for (uint32_t i = 0; i < 10; i++) {
-            DefaultAPI _task = {"TEST_TASK", "TEST_DESC_TASK" + std::to_string(i), projects_size, 0, 100, 0};
+            DefaultAPI _task = {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
             selfma->add_task(_task);
         }
     }
@@ -91,23 +89,23 @@ void test_project_serialize() {
 
 void test_project_deserialize() {
     // general ussage
-    des_ctx = std::make_unique<Selfma>("deserialization_test.file", nullptr);
-    std::unique_ptr<Selfma> _copy;
-    for (uint32_t i = 0; i < 5; i++) {
-        DefaultAPI _proj = {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
-        des_ctx->add_project(_proj);
-    }
+     des_ctx = std::make_unique<Selfma>("deserialization_test.file", nullptr);
+     std::unique_ptr<Selfma> _copy;
+     for (uint32_t i = 0; i < 5; i++) {
+         DefaultAPI _proj = {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
+         des_ctx->add_project(_proj);
+     }
 
-    for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
-        for (uint32_t i = 0; i < 10; i++) {
-            DefaultAPI _task = {"TEST_TASK", "TEST_DESC_TASK" + std::to_string(i), projects_size, 0, 100, 0};
-            des_ctx->add_task(_task);
-        }
-    }
-    //
-    QWISTYS_TODO_MSG("Before serializtion should come Merge");
-    des_ctx->serialize();
-    // should come copy.
-    TEST_ASSERT(des_ctx->deserialize());
-    des_ctx.release();
+     for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
+         for (uint32_t i = 0; i < 10; i++) {
+             DefaultAPI _task = {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
+             des_ctx->add_task(_task);
+         }
+     }
+    
+     QWISTYS_TODO_MSG("Before serializtion should come Merge");
+     des_ctx->serialize();
+     // should come copy.
+     TEST_ASSERT(des_ctx->deserialize());
+     des_ctx.release();
 }
