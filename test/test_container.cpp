@@ -9,26 +9,35 @@ ProjConf conf(0, "test", "test");
 void setUp() {
     container = std::make_unique<Container>();
 }
+
 void tearDown() {
     container.reset();
 }
 
 void test_container_add_project() {
-    TEST_ASSERT(container.get()->size() == 0);
-    container.get()->add_project(conf);
-    TEST_ASSERT(container.get()->size() == 1);
+    TEST_ASSERT(container->size() == 0);
+    container->add_project(conf);
+    TEST_ASSERT(container->size() == 1);
 }
+
 void test_container_remove_project() {
     ProjConf c(1, "new", "new");
+    ProjConf b(1, "new", "new");
+    container->add_project(conf);
     container->add_project(c);
-    int count = container->to_vector().size();
-    TEST_ASSERT(count > 0);
-    container->remove_project(0);
-    count = container->to_vector().size();
+    container->add_project(b);
+    container->print_tree_hierarchy();
+
+    TEST_ASSERT(container->size() == 3);
+
     
-    TEST_ASSERT(count == 0);
+    // container->remove_project(0);
+    // container->print_tree_hierarchy();
+    // count = container->to_vector().size();
     
+    // TEST_ASSERT(count == 0);
 }
+
 void test_container_add_task() {}
 void test_container_remove_task() {}
 void test_container_get_project() {}

@@ -19,6 +19,7 @@ public:
     VoidResult remove_task(uint32_t project_id, uint32_t task_id);
     Project* get_project(uint32_t id);
     std::vector<Project*> to_vector();
+    void print_tree_hierarchy();
     void update(void *cbs);
     uint32_t size();
 
@@ -27,6 +28,7 @@ private:
     Project* get_project_by_id(avlt_node_t* node, uint32_t id);
     void _init();
     void _clean();
+    void print_node(avlt_node_t* node, const std::string& prefix, bool isLeft);
     avlt_node_t* _root;
     uint32_t _element_counter;
     IDs _id;

@@ -5,6 +5,7 @@
 
 #include "error_handler.h"
 #include "project.h"
+#include "qwistys_alloc.h"
 #include "qwistys_macros.h"
 #include "task.h"
 
@@ -28,13 +29,16 @@ static int _compare(void* t, void* t2) {
     Task* task = (Task*) &first->user_data;
     Task* task2 = (Task*) &second->user_data;
 
-    return task->id > task2->id;
+    if (task->id < task2->id) return -1;
+    if (task->id > task2->id) return 1;
+    return 0;
 }
 
 static void _delet(void* p) {
     avlt_node_t* data = (avlt_node_t*) p;
     Task* t = (Task*) &data->user_data;
     QWISTYS_DEBUG_MSG("Clearing Task id [%d]", t->id);
+    qwistys_free(t);
 }
 
 void _print(void* p) {
