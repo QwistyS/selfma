@@ -15,7 +15,7 @@ public:
     explicit ProjConf(uint32_t id, const std::string& name, const std::string& description)
         : _id(id), _name(name), _description(description), _created_at(0) {
         time(&_created_at);
-   }
+    }
 
     // Copy constructor
     ProjConf(const ProjConf& other)
@@ -60,19 +60,19 @@ struct PACKED_STRUCT ProjectConfigurations {
     time_t created_at;
 };
 #ifdef USE_MSVC_PRAGMA_PACK
-    #pragma pack(pop)
+#    pragma pack(pop)
 #endif
 
 class Project {
 public:
-    ProjectConfigurations config; // Serializable data
+    ProjectConfigurations config;  // Serializable data
 
     Project(const ProjConf& conf) : _error(_drp), _root(nullptr), _cunter(0), _id(4096) {
         config.id = conf._id;
         copy_strchar(conf._description, config.description, MAX_DESCRIPTION_LENGTH);
         copy_strchar(conf._name, config.name, MAX_NAME_LENGTH);
         config.created_at = conf._created_at;
-        
+
         _init();
     };
 

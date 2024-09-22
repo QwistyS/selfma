@@ -95,7 +95,7 @@ int main() {
             QWISTYS_DEBUG_MSG("Sleeping duration %dms", time_to_sleep);
             std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep++));
             if (time_to_sleep == MAX_SLEEP_TIME) {
-                DefaultAPI event = {
+                DefaultAPI event {
                     .name = "event",
                     .description = "Max sleep time",
                     .project_id = 0xFFFFFFFF,

@@ -2,10 +2,10 @@
 #include <cstring>
 #include <string>
 #include "error_handler.h"
+#include "iostream"
 #include "project.h"
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
-#include "iostream"
 /** Callback for avl tree Sort by Project type */
 static int _comp(void* a, void* b) {
     Project* pa = (Project*) a;
@@ -51,11 +51,13 @@ uint32_t Container::size() {
 std::vector<Project*> Container::to_vector() {
     uint32_t tree_count = size();
     std::vector<Project*> _tmp;
+    _tmp.reserve(tree_count);
+
     uint32_t _increment = 0;
     while (tree_count) {
         Project* p = get_project_by_id(_root, _increment++);
         if (p) {
-            _tmp.push_back(p);
+            _tmp.emplace_back(p);
             tree_count--;
         }
         if (_increment == _id.max()) {
@@ -172,12 +174,13 @@ void Container::print_tree_hierarchy() {
 }
 
 void Container::print_node(avlt_node_t* node, const std::string& prefix, bool isLeft) {
-    if (!node) return;
+    if (!node)
+        return;
 
     std::cout << prefix;
-    std::cout << (isLeft ? "├──" : "└──" );
+    std::cout << (isLeft ? "├──" : "└──");
 
-    Project* proj = (Project*)node->user_data;
+    Project* proj = (Project*) node->user_data;
     std::cout << proj->get_self_id() << std::endl;
 
     // Prepare strings for children

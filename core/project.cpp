@@ -13,7 +13,7 @@ static void task_on_tree(void* t, void* e) {
     if (task->update()) {
         task->timer.set(1);
         DefaultAPI event = {};
-        auto callbacks = (std::array<event_callback, NotifyCode::NOTIFY_TOTAL>*)e;
+        auto callbacks = (std::array<event_callback, NotifyCode::NOTIFY_TOTAL>*) e;
         auto cb = (*callbacks)[NotifyCode::TASK_TIME_ELAPSED];
         if (cb) {
             cb(&event);
@@ -28,14 +28,17 @@ static int _compare(void* t, void* t2) {
     Task* task = (Task*) &first->user_data;
     Task* task2 = (Task*) &second->user_data;
 
-    if (task->id < task2->id) return -1;
-    if (task->id > task2->id) return 1;
+    if (task->id < task2->id)
+        return -1;
+    if (task->id > task2->id)
+        return 1;
     return 0;
 }
 
 static void _delet(void* p) {
-    if(!p) return;
-    
+    if (!p)
+        return;
+
     Task* t = (Task*) p;
     QWISTYS_DEBUG_MSG("Clearing Task id [%d]", t->id);
     // Nothing to do here, the ownership of the memorie is @ avl layer.
@@ -109,11 +112,12 @@ std::vector<Task*> Project::to_vector() {
     auto tree_len = size();
     uint32_t _increment = 0;
     std::vector<Task*> _tmp;
+    _tmp.reserve(tree_len);
 
     while (tree_len) {
         Task* task = get_task(_increment++);
         if (task) {
-            _tmp.push_back(task);
+            _tmp.emplace_back(task);
             tree_len--;
         }
         if (_increment == _id.max()) {
