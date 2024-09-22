@@ -73,12 +73,12 @@ void test_project_remove() {
 void test_project_serialize() {
     // Push 5 more porjects
 
-    for (uint32_t i = 1; i < 5; i++) {
+    for (uint32_t i = 1; i <= 4; i++) {
         DefaultAPI _proj = {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
         selfma->add_project(_proj);
     }
 
-    for (uint32_t projects_size = 0; projects_size < 6; projects_size++) {
+    for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
         for (uint32_t i = 0; i < 10; i++) {
             DefaultAPI _task = {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
             selfma->add_task(_task);
