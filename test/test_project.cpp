@@ -4,62 +4,61 @@
 #include "task.h"
 #include "unity.h"
 
-std::unique_ptr<Project> obj;
+std::unique_ptr<Project> project;
 const ProjConf conf(0, "Test", "Test");
 TaskConf_t config = {0, "Test data", 60};
-Task t1(&config);
-Task t2(&config);
+static Task t1(&config);
+static Task t2(&config);
 
 void setUp() {
-    obj = std::make_unique<Project>(conf);
+    project = std::make_unique<Project>(conf);
 }
 
 void tearDown() {
-    obj->clean();
-    obj.reset();
+    project.reset();
 }
 
 void test_project_ctor() {
     
-    TEST_ASSERT(obj->config.id == 0);
-    TEST_ASSERT_EQUAL_STRING(obj->config.name, "Test");
-    TEST_ASSERT_EQUAL_STRING(obj->config.description, "Test");
+    TEST_ASSERT(project->config.id == 0);
+    TEST_ASSERT_EQUAL_STRING(project->config.name, "Test");
+    TEST_ASSERT_EQUAL_STRING(project->config.description, "Test");
 
 }
 
 void test_project_dtor() {
-    QWISTYS_TODO_MSG("Create dtor test for Project class, currently _BUG_ in RAII");
+    QWISTYS_TODO_MSG("Tested each time tearDown is called");
 }
 
 void test_project_get_size() {
-    obj.get()->add(&t1);
-    obj.get()->add(&t2);
+    project->add(&t1);
+    project->add(&t2);
 
-    TEST_ASSERT(obj.get()->size() == 2);
+    TEST_ASSERT(project->size() == 2);
 }
 
 void test_project_task_vec() {
-    obj.get()->add(&t1);
-    obj.get()->add(&t2);
+    project->add(&t1);
+    project->add(&t2);
 
-    auto tasks = obj.get()->to_vector();
+    auto tasks = project->to_vector();
     TEST_ASSERT(tasks.size() == 2);
 }
 
 void test_project_del_task() {
-    obj.get()->add(&t1);
-    obj.get()->add(&t2);
+    project->add(&t1);
+    project->add(&t2);
 
-    obj.get()->remove(&t2);
+    project->remove(&t2);
 
-    TEST_ASSERT(obj.get()->size() == 1);
+    TEST_ASSERT(project->size() == 1);
 }
 
 void test_project_get_task() {
-    obj.get()->add(&t1);
-    obj.get()->add(&t2);
+    project->add(&t1);
+    project->add(&t2);
 
-    auto ret = obj.get()->get_task(0);
+    auto ret = project->get_task(0);
 
     TEST_ASSERT(ret->id == 0);
     TEST_ASSERT_EQUAL_STRING(ret->description, t1.description);

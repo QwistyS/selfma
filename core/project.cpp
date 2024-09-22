@@ -5,7 +5,6 @@
 
 #include "error_handler.h"
 #include "project.h"
-#include "qwistys_alloc.h"
 #include "qwistys_macros.h"
 #include "task.h"
 
@@ -35,10 +34,13 @@ static int _compare(void* t, void* t2) {
 }
 
 static void _delet(void* p) {
-    avlt_node_t* data = (avlt_node_t*) p;
-    Task* t = (Task*) &data->user_data;
+    if(!p) return;
+    
+    Task* t = (Task*) p;
     QWISTYS_DEBUG_MSG("Clearing Task id [%d]", t->id);
-    qwistys_free(t);
+    // Nothing to do here, the ownership of the memorie is @ avl layer.
+    // So unles you want to reset some fields in Task structure go nus
+    // but after this scope will end this memorye will be free by avl_delete.
 }
 
 void _print(void* p) {
@@ -63,17 +65,17 @@ void Project::_init() {
     if (auto ret = _id.init(); ret.is_err()) {
         QWISTYS_HALT("Fail to init id system in Project");
     }
+    QWISTYS_DEBUG_MSG("Success of creating IDs instance for Project id %d", config.id);
 }
 
 void Project::clean() {
-    QWISTYS_DEBUG_MSG("In project clean");
     if (_root) {
+        QWISTYS_DEBUG_MSG("Cleaning project %d...", config.id);
         avlt_free_tree(_root, _delet);
-        QWISTYS_DEBUG_MSG("Project %d cleared", get_self_id());
+        _cunter = 0;
+        _id.clean();
         _root = nullptr;
     }
-    _cunter = 0;
-    _id.clean();
 }
 
 uint32_t Project::size() {

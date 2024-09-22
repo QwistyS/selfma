@@ -68,14 +68,21 @@ public:
     ProjectConfigurations config; // Serializable data
 
     Project(const ProjConf& conf) : _error(_drp), _root(nullptr), _cunter(0), _id(4096) {
-        _init();
         config.id = conf._id;
         copy_strchar(conf._description, config.description, MAX_DESCRIPTION_LENGTH);
         copy_strchar(conf._name, config.name, MAX_NAME_LENGTH);
         config.created_at = conf._created_at;
         
+        _init();
     };
-    ~Project() = default;
+
+    ~Project() {
+        // For test's only this is never should be a thing
+        // The mem of this class is at avl pull it will manage the lifetime of this objec
+        // however, for test purpeses we do use dtor to validate we clear all sub trees
+        // If you want to free this object call clean() not from dtorc and delete callback on avl
+        clean();
+    }
 
     // get size of current ammount of elements in total in the tree. __NOTE__ : not related to id's.
     uint32_t size();
