@@ -26,16 +26,11 @@ void test_container_remove_project() {
     container->add_project(conf);
     container->add_project(c);
     container->add_project(b);
-    container->print_tree_hierarchy();
 
     TEST_ASSERT(container->size() == 3);
-
     
-    // container->remove_project(0);
-    // container->print_tree_hierarchy();
-    // count = container->to_vector().size();
-    
-    // TEST_ASSERT(count == 0);
+    container->remove_project(0);
+    TEST_ASSERT(container->to_vector().size() == 2);
 }
 
 void test_container_add_task() {}

@@ -28,6 +28,7 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # For GCC and Clang
     add_compile_options(-Wno-ignored-attributes)
+    add_definitions(-DSTATIC_API)
     add_definitions(-DUSE_GNU_PACKED_ATTRIBUTE)
 elseif(MSVC)
     # For Microsoft Visual C++
