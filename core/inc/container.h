@@ -6,10 +6,13 @@
 #include "ids_pool.h"
 #include "project.h"
 #include "qwistys_macros.h"
+#include "task.h"
+
+static ProjConf default_config(0, "", "");
 
 class Container {
 public:
-    Container() : _element_counter(0), _root(nullptr), _id(4096) { _init(); };
+    Container() : _element_counter(0), _root(nullptr), _id(4096), _proj_buffer(default_config) { _init(); };
     ~Container() { _clean(); };
 
     VoidResult add_project(ProjConf& config);
@@ -24,14 +27,14 @@ public:
     uint32_t size();
 
 private:
-    static void five_wrigth() { QWISTYS_ERROR_MSG("JUST FOR FUN"); }
-    Project* get_project_by_id(avlt_node_t* node, uint32_t id);
+    Project* _get_project_by_id(avlt_node_t* node, uint32_t id);
     void _init();
     void _clean();
-    void print_node(avlt_node_t* node, const std::string& prefix, bool isLeft);
+    void _print_node(avlt_node_t* node, const std::string& prefix, bool is_left);
     avlt_node_t* _root;
     uint32_t _element_counter;
     IDs _id;
+    Project _proj_buffer;
 };
 
 #endif  // SELFMA_CONTAINER_H

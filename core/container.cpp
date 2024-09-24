@@ -4,7 +4,7 @@
 #include "error_handler.h"
 #include "iostream"
 #include "project.h"
-#include "qwistys_alloc.h"
+
 #include "qwistys_avltree.h"
 #include "qwistys_macros.h"
 
@@ -58,7 +58,7 @@ std::vector<Project*> Container::to_vector() {
 
     uint32_t _increment = 0;
     while (tree_count) {
-        Project* p = get_project_by_id(_root, _increment++);
+        Project* p = _get_project_by_id(_root, _increment++);
         if (p) {
             _tmp.emplace_back(p);
             tree_count--;
@@ -88,33 +88,34 @@ inline avlt_node_t* find_rightmost_node(avlt_node_t* node) {
     return node;
 }
 
-
 VoidResult Container::add_project(ProjConf& config) {
     // Set id to config before writing the object to tree
     auto new_id = _id.next();
     if (new_id.is_err()) {
         return Err(ErrorCode::ADD_PROJECT_FAIL, "Fail to add project generate id fail");
     }
+
     config._id = new_id.value();
-    Project* dummy = (Project*)qwistys_malloc(sizeof(Project), nullptr);
-    if (!dummy) {
-        return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed to find inserted node");
-    }
-    
-    dummy->config.id = config._id;
+    _proj_buffer.config.id = config._id;
+
     // Allocate memory in the tree
-    _root = avlt_insert(_root, dummy, sizeof(Project), _comp);
+    _root = avlt_insert(_root, &_proj_buffer, sizeof(Project), _comp);
     if (!_root) {
         return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed to allocate memory in tree");
     }
 
-    auto mem = get_project_by_id(_root, config._id);
+    auto mem = _get_project_by_id(_root, config._id);
     if (!mem) {
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed to retrieve poroject");
     }
+
     // Construct the Project object in the allocated memory
+    Project* pp = nullptr;
+    pp = new (mem) Project(config);
+    if (!pp) {
+        return Err(ErrorCode::ADD_PROJECT_FAIL, "Failed ctor the project");
+    }
     
-    Project* pp = new ((void*)mem) Project(config);
-    qwistys_free(dummy);
     _element_counter++;
     QWISTYS_DEBUG_MSG("Project {%s} added successful", pp->config.name);
     return Ok();
@@ -126,7 +127,7 @@ VoidResult Container::remove_project(uint32_t project_id) {
         return Ok();
     }
 
-    Project* delete_candidate = get_project_by_id(_root, project_id);
+    Project* delete_candidate = _get_project_by_id(_root, project_id);
 
     if (delete_candidate) {
         _root = avlt_delete(_root, delete_candidate, _comp, _del);
@@ -143,7 +144,7 @@ VoidResult Container::remove_project(uint32_t project_id) {
 }
 
 VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
-    Project* p = get_project_by_id(_root, project_id);
+    Project* p = _get_project_by_id(_root, project_id);
     if (p) {
         Task* t = p->get_task(task_id);
         if (t) {
@@ -160,10 +161,10 @@ VoidResult Container::print() {
 }
 
 Project* Container::get_project(uint32_t id) {
-    return get_project_by_id(_root, id);
+    return _get_project_by_id(_root, id);
 }
 
-Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
+Project* Container::_get_project_by_id(avlt_node_t* node, uint32_t id) {
     if (!node) {
         return NULL;
     }
@@ -172,9 +173,9 @@ Project* Container::get_project_by_id(avlt_node_t* node, uint32_t id) {
     if (proj->get_self_id() == id) {
         return proj;
     } else if (proj->get_self_id() < id) {
-        return get_project_by_id(node->right, id);
+        return _get_project_by_id(node->right, id);
     } else if (proj->get_self_id() > id) {
-        return get_project_by_id(node->left, id);
+        return _get_project_by_id(node->left, id);
     } else {
         return NULL;
     }
@@ -197,22 +198,22 @@ void Container::print_tree_hierarchy() {
         std::cout << "Tree is empty" << std::endl;
         return;
     }
-    print_node(_root, "", true);
+    _print_node(_root, "", true);
 }
 
-void Container::print_node(avlt_node_t* node, const std::string& prefix, bool isLeft) {
+void Container::_print_node(avlt_node_t* node, const std::string& prefix, bool is_left) {
     if (!node)
         return;
 
     std::cout << prefix;
-    std::cout << (isLeft ? "├──" : "└──");
+    std::cout << (is_left ? "├──" : "└──");
 
     Project* proj = (Project*) node->user_data;
     std::cout << proj->get_self_id() << std::endl;
 
     // Prepare strings for children
-    std::string childPrefix = prefix + (isLeft ? "│   " : "    ");
+    std::string child_prefix = prefix + (is_left ? "│   " : "    ");
 
-    print_node(node->right, childPrefix, true);
-    print_node(node->left, childPrefix, false);
+    _print_node(node->right, child_prefix, true);
+    _print_node(node->left, child_prefix, false);
 }
