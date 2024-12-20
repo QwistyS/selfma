@@ -2,8 +2,6 @@
 #include <queue>
 #include <thread>
 #include <chrono>
-#include <memory>
-#include "qwistys_macros.h"
 #include "selfma.h"
 
 enum SelfmaProto {

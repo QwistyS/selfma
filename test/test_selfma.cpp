@@ -82,23 +82,22 @@ void test_project_serialize() {
 
 void test_project_deserialize() {
     // general ussage
-    des_ctx = std::make_unique<Selfma>("deserialization_test.file", nullptr);
+    Selfma des_ctx("deserialization_test.file", nullptr);
     std::unique_ptr<Selfma> _copy;
     for (uint32_t i = 0; i < 5; i++) {
         DefaultAPI _proj {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
-        des_ctx->add_project(_proj);
+        des_ctx.add_project(_proj);
     }
 
     for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
         for (uint32_t i = 0; i < 10; i++) {
             DefaultAPI _task {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
-            des_ctx->add_task(_task);
+            des_ctx.add_task(_task);
         }
     }
 
     QWISTYS_TODO_MSG("Before serializtion should come Merge");
-    des_ctx->serialize();
+    des_ctx.serialize();
     // should come copy.
-    TEST_ASSERT(des_ctx->deserialize());
-    des_ctx.release();
+    TEST_ASSERT(des_ctx.deserialize());
 }

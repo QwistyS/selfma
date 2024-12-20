@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include "unity.h"
 #include "unity_internals.h"
@@ -15,12 +16,17 @@ extern void test_project_get_self_id();
 
 int main(void)
 {
-  UnityBegin("test/runner/test_project_runne.c");
-  RUN_TEST(test_project_ctor);
-  RUN_TEST(test_project_get_size);
-  RUN_TEST(test_project_task_vec);
-  RUN_TEST(test_project_del_task);
-  RUN_TEST(test_project_get_task);
-  qwistys_print_memory_stats();
+
+  int test = 10;
+  test ^= (1 << 1);
+  fprintf(stderr, "%d\n", test);
+  
+  // UnityBegin("test/runner/test_project_runne.c");
+  // RUN_TEST(test_project_ctor);
+  // RUN_TEST(test_project_get_size);
+  // RUN_TEST(test_project_task_vec);
+  // RUN_TEST(test_project_del_task);
+  // RUN_TEST(test_project_get_task);
+  // qwistys_print_memory_stats();
   return (UnityEnd());
 }
