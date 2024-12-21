@@ -70,11 +70,16 @@ std::vector<DefaultAPI> Selfma::projects_to_vec() {
             break;
         }
 
-        result.emplace_back(proj->config.name,
-                            proj->config.description,
-                            proj->config.id,
-                        proj->size(),
-                    0, 0);
+        uint32_t proj_id = proj->config.id;
+
+        result.emplace_back(DefaultAPI{
+            proj->config.name,         // string
+            proj->config.description,  // string
+            proj_id,                   // uint32_t
+            proj->size(),              // uint32_t
+            0.0,                       // double (use 0.0 not 0 for double)
+            0                          // uint32_t
+        });
     }
     proj = nullptr;
     QWISTYS_DEBUG_MSG("Size of array %d", result.size());

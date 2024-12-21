@@ -32,14 +32,8 @@ struct DefaultAPI {
     uint32_t task_id;
     double duration;
     uint32_t notify;
-    DefaultAPI(const char* n, const char* desc, uint32_t proj_id, uint32_t tasks, int dur, int notif)
-        : name(n), description(desc), project_id(proj_id), task_id(tasks), duration(dur), notify(notif) {}
-    DefaultAPI(const char* n, const char* desc, uint32_t proj_id)
-        : name(n), description(desc), project_id(proj_id) {}
-    DefaultAPI(const char* n, const char* desc, uint32_t proj_id, uint32_t task_id)
-        : name(n), description(desc), project_id(proj_id), task_id(task_id) {}
+
     DefaultAPI() = default;
-    DefaultAPI& operator=(const DefaultAPI& other) = default;
 };
 
 enum NotifyCode {
