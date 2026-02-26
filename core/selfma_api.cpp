@@ -39,7 +39,7 @@ static void write_header(std::fstream& file, selfma_ctx_t* ctx, std::vector<Proj
     QWISTYS_TODO_MSG("Calculate the CRC of the data");
     header->crc = 0xFFAAFFAA;  // Placeholder
     header->version = 55555;
-    auto ret = IS_LITTLE_ENDIAN ? std::memcpy(header->magic, "face", 4) : std::memcpy(header->magic, "FACA", 4);
+    std::memcpy(header->magic, "SLFM", 4);
     header->num_of_chunks = static_cast<uint8_t>(projects.size());
 
     // Handle user data
@@ -107,58 +107,48 @@ API_SELFMA VoidResult selfma_serialize(selfma_ctx_t* ctx) {
 }
 
 static VoidResult deserialize(const std::string& filename, selfma_ctx_t* ctx) {
-    auto ret = Ok();
     if (!is_storage()) {
         return Err(ErrorCode::NO_STORAGE, "No storage available");
     }
 
-    // Open file for reading
     FileGuard endpoint(filename, std::ios::binary | std::ios::in);
     if (!endpoint.is_open()) {
-        QWISTYS_TELEMETRY_END();
         return Err(ErrorCode::FILE_OPEN_ERROR, "Failed to open file for reading");
     }
 
-    // Read and validate header
     header_t header;
     endpoint.get().read(reinterpret_cast<char*>(&header), sizeof(header_t));
 
-    if (std::memcmp(header.magic, "FACA", 4) != 0) {
+    if (std::memcmp(header.magic, "SLFM", 4) != 0) {
         return Err(ErrorCode::FILE_NOT_FOUND, "Invalid file format");
     }
 
     QWISTYS_TODO_MSG("Implement crc check");
-    // Read chunk sizes
     std::vector<uint32_t> chunk_sizes(header.num_of_chunks);
     endpoint.get().read(reinterpret_cast<char*>(chunk_sizes.data()), header.num_of_chunks * sizeof(uint32_t));
 
-    // Create new context
-    selfma_ctx_t* _tmp_ctx = selfma_create(0, header.file_name, ctx->user_data);
-    QWISTYS_ASSERT(_tmp_ctx);
+    // Reset container so we load into a clean state
+    delete ctx->container;
+    ctx->container = new Container();
 
-    // Read and reconstruct projects and tasks
-    for (uint8_t i = 0; i < chunk_sizes.size(); ++i) {
+    for (size_t i = 0; i < chunk_sizes.size(); ++i) {
         ProjectConfigurations _tmp_configurations;
         endpoint.get().read(reinterpret_cast<char*>(&_tmp_configurations), sizeof(ProjectConfigurations));
         ProjConf conf(_tmp_configurations.id, _tmp_configurations.name, _tmp_configurations.description);
-        _tmp_ctx->container->add_project(conf);
+        ctx->container->add_project(conf);
         for (uint32_t j = 0; j < chunk_sizes[i]; ++j) {
             TaskConf_t config;
             auto task = std::make_shared<Task>(&config);
             endpoint.get().read(reinterpret_cast<char*>(task.get()), sizeof(Task));
-            _tmp_ctx->container->add_task(i, task.get());
+            ctx->container->add_task(i, task.get());
         }
     }
 
-    // Optionally, set user data if it exists
-    if (header.user_data_length > 0) {
+    if (header.user_data_length > 0 && ctx->user_data) {
         memcpy(ctx->user_data, header.user_buffer, header.user_data_length);
     }
 
-    QWISTYS_TODO_MSG("Check if you actually can delete the old context");
-    selfma_destroy(ctx);
-    ctx = _tmp_ctx;
-    return ret;
+    return Ok();
 }
 
 API_SELFMA VoidResult selfma_deserialize(selfma_ctx_t* ctx) {
