@@ -5,9 +5,12 @@
 #include <fstream>
 #include <string>
 #include <string_view>
+#include <vector>
 #include "qwistys_alloc.h"
 #include "qwistys_macros.h"
 #include "task.h"
+
+enum class CompressionType : uint8_t { NONE = 0, BZIP2 = 1, ZLIB = 2 };
 
 #ifndef STORAGE_PATH
 #    define STORAGE_PATH "none"
@@ -66,7 +69,9 @@ typedef PACKED_STRUCT struct {
     size_t user_data_length;                   // Length of user data (max 1024 bytes)
     char user_buffer[MAX_DESCRIPTION_LENGTH];  // user buffer
     char file_name[MAX_NAME_LENGTH];           // user buffer
-    uint32_t each_chunk_size[];                // User identification (SHA256)
+    uint8_t compression_type;                  // CompressionType: 0=NONE, 1=BZIP2, 2=ZLIB
+    uint32_t uncompressed_data_size;           // Original data size before compression
+    uint32_t each_chunk_size[];                // Number of tasks per project chunk
 } header_t;
 #ifdef USE_MSVC_PRAGMA_PACK
     #pragma pack(pop)
@@ -111,5 +116,8 @@ bool is_storage();
 std::string hash_to_file(const std::string& uuid);
 bool is_exist(std::string_view path);
 bool handle_security(const char* uuid, std::fstream& fd, bool (*callback)(const char*, std::fstream&));
+
+void compress_data(CompressionType type, const char* input, size_t size, std::vector<char>& output);
+void decompress_data(CompressionType type, const char* input, size_t size, std::vector<char>& output);
 
 #endif  // SELFMA_FILE_H

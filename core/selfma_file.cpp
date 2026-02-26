@@ -1,17 +1,53 @@
 #include "selfma_file.h"
+#include <cstring>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 const static std::filesystem::path storage{STORAGE_PATH};
 
 void header_print(const header_t* h) {
-    fprintf(stderr, "CRC: 0x%08x\n", h->crc);   
-    fprintf(stderr, "VER: %d\n", h->version);   
-    fprintf(stderr, "MAGIC: %s\n", h->magic);   
-    fprintf(stderr, "CHUNKS: %d\n", h->num_of_chunks);   
-    fprintf(stderr, "USR_DATA_LENG: %zu\n", h->user_data_length);   
-    fprintf(stderr, "FILE: %s\n", h->file_name);   
-    fprintf(stderr, "POINTER: 0x%08x\n", h->each_chunk_size);   
+    fprintf(stderr, "CRC: 0x%08x\n", h->crc);
+    fprintf(stderr, "VER: %d\n", h->version);
+    fprintf(stderr, "MAGIC: %s\n", h->magic);
+    fprintf(stderr, "CHUNKS: %d\n", h->num_of_chunks);
+    fprintf(stderr, "USR_DATA_LENG: %zu\n", h->user_data_length);
+    fprintf(stderr, "FILE: %s\n", h->file_name);
+    fprintf(stderr, "COMPRESSION: %d\n", h->compression_type);
+    fprintf(stderr, "UNCOMPRESSED_SIZE: %u\n", h->uncompressed_data_size);
+    fprintf(stderr, "POINTER: %p\n", (const void*)h->each_chunk_size);
+}
+
+void compress_data(CompressionType type, const char* input, size_t size, std::vector<char>& output) {
+    switch (type) {
+        case CompressionType::NONE:
+            output.assign(input, input + size);
+            break;
+        case CompressionType::BZIP2:
+            // TODO: implement BZIP2 case
+            output.assign(input, input + size);
+            break;
+        case CompressionType::ZLIB:
+            // TODO: implement ZLIB case
+            output.assign(input, input + size);
+            break;
+    }
+}
+
+void decompress_data(CompressionType type, const char* input, size_t size, std::vector<char>& output) {
+    switch (type) {
+        case CompressionType::NONE:
+            output.assign(input, input + size);
+            break;
+        case CompressionType::BZIP2:
+            // TODO: implement BZIP2 case
+            output.assign(input, input + size);
+            break;
+        case CompressionType::ZLIB:
+            // TODO: implement ZLIB case
+            output.assign(input, input + size);
+            break;
+    }
 }
 
 header_t* get_header_buffer(size_t num_of_chunks) {

@@ -89,6 +89,7 @@ inline avlt_node_t* find_rightmost_node(avlt_node_t* node) {
 }
 
 VoidResult Container::add_project(ProjConf& config) {
+    QWISTYS_TELEMETRY_START();
     // Set id to config before writing the object to tree
     auto new_id = _id.next();
     if (new_id.is_err()) {
@@ -118,10 +119,12 @@ VoidResult Container::add_project(ProjConf& config) {
     
     _element_counter++;
     QWISTYS_DEBUG_MSG("Project {%s} added successful", pp->config.name);
+    QWISTYS_TELEMETRY_END();
     return Ok();
 }
 
 VoidResult Container::remove_project(uint32_t project_id) {
+    QWISTYS_TELEMETRY_START();
     if (!_root || _element_counter == 0) {
         QWISTYS_DEBUG_MSG("Nothing to clear ...");
         return Ok();
@@ -138,17 +141,20 @@ VoidResult Container::remove_project(uint32_t project_id) {
             _element_counter = 0;  // Tree is now empty
             _root = nullptr;
         }
+        QWISTYS_TELEMETRY_END();
         return Ok();
     }
     return Err(ErrorCode::PROJECT_NOT_FOUND, "Project not found for deletion");
 }
 
 VoidResult Container::remove_task(uint32_t project_id, uint32_t task_id) {
+    QWISTYS_TELEMETRY_START();
     Project* p = _get_project_by_id(_root, project_id);
     if (p) {
         Task* t = p->get_task(task_id);
         if (t) {
             p->remove(t);
+            QWISTYS_TELEMETRY_END();
             return Ok();
         }
     }
@@ -182,10 +188,12 @@ Project* Container::_get_project_by_id(avlt_node_t* node, uint32_t id) {
 }
 
 VoidResult Container::add_task(uint32_t project_id, Task* task) {
+    QWISTYS_TELEMETRY_START();
     Project* project = get_project(project_id);
     if (!project) {
         return Err(ErrorCode::OK, "project Id[" + std::to_string(project_id) + "] does not exis");
     }
+    QWISTYS_TELEMETRY_END();
     return project->add(task);
 }
 

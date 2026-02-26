@@ -1,7 +1,8 @@
-#include "selfma.h"
 #include <cstdint>
+
 #include "project.h"
 #include "qwistys_macros.h"
+#include "selfma.h"
 #include "selfma_api.h"
 #include "task.h"
 
@@ -22,8 +23,8 @@ bool Selfma::_handle_add_project() {
 }
 
 inline VoidResult check_args(const DefaultAPI& args) {
-    if ((args.name.size() == 0 || args.description.size() == 0)
-        || (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
+    if ((args.name.size() == 0 || args.description.size() == 0) ||
+        (args.name.size() >= MAX_NAME_LENGTH || args.description.size() >= MAX_DESCRIPTION_LENGTH)) {
         return Err(ErrorCode::INPUT, "project_add: args sanity fail", Severity::LOW);
     }
     return Ok();
@@ -31,9 +32,15 @@ inline VoidResult check_args(const DefaultAPI& args) {
 /* End of Handlers */
 
 void Selfma::_setup_drp() {
-    _drp.register_recovery_action(ErrorCode::MEMORY_ERROR, [this]() { return _handle_mem(); });
-    _drp.register_recovery_action(ErrorCode::ADD_PROJECT_FAIL, [this]() { return _handle_add_project(); });
-    _drp.register_recovery_action(ErrorCode::INPUT, [this]() { return _handle_input(); });
+    _drp.register_recovery_action(ErrorCode::MEMORY_ERROR, [this]() {
+        return _handle_mem();
+    });
+    _drp.register_recovery_action(ErrorCode::ADD_PROJECT_FAIL, [this]() {
+        return _handle_add_project();
+    });
+    _drp.register_recovery_action(ErrorCode::INPUT, [this]() {
+        return _handle_input();
+    });
 }
 
 bool Selfma::add_project(const DefaultAPI& args) {
@@ -65,7 +72,7 @@ std::vector<DefaultAPI> Selfma::projects_to_vec() {
     Project* proj = nullptr;
     uint32_t ids = 0;
     while (true) {
-        proj = (Project*) selfma_get_project(_ctx, ids++);
+        proj = (Project*)selfma_get_project(_ctx, ids++);
         if (!proj) {
             break;
         }
@@ -73,12 +80,12 @@ std::vector<DefaultAPI> Selfma::projects_to_vec() {
         uint32_t proj_id = proj->config.id;
 
         result.emplace_back(DefaultAPI{
-            proj->config.name,         // string
-            proj->config.description,  // string
-            proj_id,                   // uint32_t
-            proj->size(),              // uint32_t
-            0.0,                       // double (use 0.0 not 0 for double)
-            0                          // uint32_t
+            proj->config.name,        // string
+            proj->config.description, // string
+            proj_id,                  // uint32_t
+            proj->size(),             // uint32_t
+            0.0,                      // double (use 0.0 not 0 for double)
+            0                         // uint32_t
         });
     }
     proj = nullptr;
@@ -135,7 +142,7 @@ void Selfma::update() {
 }
 
 void Selfma::on_update_on(void* p) {
-    selfma_update((selfma_ctx_t*) p, &_callbacks);
+    selfma_update((selfma_ctx_t*)p, &_callbacks);
 }
 
 void Selfma::nop_stub(void* p) {

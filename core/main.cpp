@@ -1,7 +1,8 @@
+#include <chrono>
 #include <cstdint>
 #include <queue>
 #include <thread>
-#include <chrono>
+
 #include "selfma.h"
 
 enum SelfmaProto {
@@ -20,7 +21,6 @@ enum SelfmaProto {
     SELFMA_TOTAL,
 };
 
-
 // Range in ms of time sleep
 // in case when data isn't in use, we deep the thread to sleep
 // However we still wanna to know earlier as possible if some one needs service
@@ -29,18 +29,21 @@ enum SelfmaProto {
 // Till Max time will be reached at this point thread is in constant sleep, do you still need it?
 // maby just kill it and reinit when needed?
 constexpr uint32_t DEFAULT_SLEEP_TIME = 5; // ms
-constexpr uint32_t MAX_SLEEP_TIME = 10; // ms
+constexpr uint32_t MAX_SLEEP_TIME = 10;    // ms
 static bool earth_is_spinning = true;
 volatile static uint32_t time_to_sleep = DEFAULT_SLEEP_TIME;
 
 struct SelfmaMsg {
-  DefaultAPI args;
+    DefaultAPI args;
     SelfmaProto cmd;
 };
 
 void on_event(DefaultAPI* data) {
-    QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s", 
-                      data->project_id, data->notify, data->name.c_str(), data->description.c_str());
+    QWISTYS_DEBUG_MSG("Notification from selfma id %zu type %d name %s description %s",
+                      data->project_id,
+                      data->notify,
+                      data->name.c_str(),
+                      data->description.c_str());
 }
 
 int main() {
@@ -49,9 +52,9 @@ int main() {
     selfma->evntsystem_on();
     // Somehow get the file
     // launch the app
-    
+
     std::queue<SelfmaMsg> msgs;
-    
+
     QWISTYS_DEBUG_MSG("Hello Selfma");
 
     selfma->register_callback(NotifyCode::EVENT_MAX_TIME_SLEEP, on_event);
@@ -74,7 +77,7 @@ int main() {
         .args = proj,
         .cmd = SelfmaProto::ADD_PROJECT,
     };
-    
+
     SelfmaMsg msg1 = {
         .args = task,
         .cmd = SelfmaProto::ADD_TASK,
@@ -83,7 +86,6 @@ int main() {
     msgs.push(msg);
     msgs.push(msg1);
 
-    
     while (earth_is_spinning) {
         SelfmaMsg msg;
         selfma->update();
@@ -93,7 +95,7 @@ int main() {
             QWISTYS_DEBUG_MSG("Sleeping duration %dms", time_to_sleep);
             std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep++));
             if (time_to_sleep == MAX_SLEEP_TIME) {
-                DefaultAPI event {
+                DefaultAPI event{
                     .name = "event",
                     .description = "Max sleep time",
                     .project_id = 0xFFFFFFFF,
@@ -101,55 +103,54 @@ int main() {
                     .duration = 0,
                     .notify = NotifyCode::EVENT_MAX_TIME_SLEEP,
                 };
-                
+
                 time_to_sleep = DEFAULT_SLEEP_TIME;
                 selfma->notify(event);
             }
             continue;
-        } else {
-            msg = msgs.front();
-            msgs.pop();
         }
-        
+        msg = msgs.front();
+        msgs.pop();
+
         switch (msg.cmd) {
-            case ADD_PROJECT:
-                selfma->add_project(msg.args);
-                break;
-            case ADD_TASK:
-                selfma->add_task(msg.args);
-                break;
-            case REMOVE_PROJECT:
-                selfma->remove_project(msg.args);
-                break;
-            case REMOVE_TASK:
-                selfma->remove_task(msg.args);
-                break;
-            case UPDATE_PROJECT:
-                break;
-            case UPDATE_TASK:
-                break;
-            case GET_PROJECT:
-                break;
-            case GET_TASK:
-                break;
-            case EVENT_SYS_ON:
-                selfma->evntsystem_on();
-                break;
-            case EVENT_SYS_OFF:
-                selfma->evntsystem_on();
-                break;
-            case KILL:
-                earth_is_spinning = false;
-                break;
-           default:
-                break;
+        case ADD_PROJECT:
+            selfma->add_project(msg.args);
+            break;
+        case ADD_TASK:
+            selfma->add_task(msg.args);
+            break;
+        case REMOVE_PROJECT:
+            selfma->remove_project(msg.args);
+            break;
+        case REMOVE_TASK:
+            selfma->remove_task(msg.args);
+            break;
+        case UPDATE_PROJECT:
+            break;
+        case UPDATE_TASK:
+            break;
+        case GET_PROJECT:
+            break;
+        case GET_TASK:
+            break;
+        case EVENT_SYS_ON:
+            selfma->evntsystem_on();
+            break;
+        case EVENT_SYS_OFF:
+            selfma->evntsystem_on();
+            break;
+        case KILL:
+            earth_is_spinning = false;
+            break;
+        default:
+            break;
         }
         time_to_sleep = DEFAULT_SLEEP_TIME;
     }
 
     // Marge the client with file
     // Write Marge to file
-    // closeup     
+    // closeup
     selfma->shutdown();
     return 0;
 }

@@ -62,9 +62,32 @@ file(GLOB SELFMA_SOURCES
 add_library(${PROJECT_NAME} STATIC ${SELFMA_SOURCES})
 
 # Use PRIVATE linkage for qwistys_lib
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PRIVATE
     qwistys_lib
 )
+
+# ── Optional Tracy profiler support ──────────────────────────────────────────
+# Enable with:  cmake -DSELFMA_TRACY=ON ...
+# Requires Tracy client headers under extern/tracy (or a system install).
+option(SELFMA_TRACY "Enable Tracy profiler instrumentation for selfma" OFF)
+if(SELFMA_TRACY)
+    find_package(Tracy QUIET)
+    if(Tracy_FOUND)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Tracy::TracyClient)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE)
+        message(STATUS "selfma: Tracy profiler enabled")
+    else()
+        # Fallback: look for Tracy as a local submodule at extern/tracy
+        set(TRACY_SUBMODULE "${CMAKE_CURRENT_SOURCE_DIR}/extern/tracy")
+        if(EXISTS "${TRACY_SUBMODULE}/public/tracy/Tracy.hpp")
+            target_include_directories(${PROJECT_NAME} PRIVATE "${TRACY_SUBMODULE}/public")
+            target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE)
+            message(STATUS "selfma: Tracy profiler enabled (submodule at extern/tracy)")
+        else()
+            message(WARNING "selfma: SELFMA_TRACY=ON but Tracy not found; instrumentation disabled")
+        endif()
+    endif()
+endif()
 
 # Ensure all test files are compiled as C++
 set_source_files_properties(

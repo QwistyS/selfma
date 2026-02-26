@@ -1,9 +1,12 @@
 #include <cassert>
 #include <memory>
 #include <string>
+
 #include "selfma.h"
 #include "task.h"
 #include "unity.h"
+
+using std::to_string;
 
 const std::string db_path = STORAGE_PATH "/user_file.hash";
 std::unique_ptr<Selfma> selfma = nullptr;
@@ -23,9 +26,9 @@ void tearDown() {
 }
 
 void test_project_add_args() {
-    std::string test_name_false = "";
+    std::string test_name_false;
     std::string test_name_true = "TestName";
-    std::string test_desc_false = "";
+    std::string test_desc_false;
     std::string test_desc_true = "TestDesc";
 
     // false positive
@@ -45,7 +48,7 @@ void test_project_add_args() {
 
 void test_project_add_task() {
     DefaultAPI proj{"Project Name Project Name", "RAMEN", 0};
-    selfma->add_project(proj);  // Push project.
+    selfma->add_project(proj); // Push project.
     proj.project_id = 0;
     proj.name = "Day 2";
     proj.description = "Go to market";
@@ -67,13 +70,13 @@ void test_project_serialize() {
     // Push 5 more porjects
 
     for (uint32_t i = 1; i <= 4; i++) {
-        DefaultAPI _proj {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
+        DefaultAPI _proj{"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
         selfma->add_project(_proj);
     }
 
     for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
         for (uint32_t i = 0; i < 10; i++) {
-            DefaultAPI _task {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
+            DefaultAPI _task{"TEST_TASK", to_string(i), projects_size, 0, 100, 0};
             selfma->add_task(_task);
         }
     }
@@ -85,13 +88,13 @@ void test_project_deserialize() {
     Selfma des_ctx("deserialization_test.file", nullptr);
     std::unique_ptr<Selfma> _copy;
     for (uint32_t i = 0; i < 5; i++) {
-        DefaultAPI _proj {"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
+        DefaultAPI _proj{"PROJECT_TEST", "PROJ_DESC_TEST", 0, 0, 0, 0};
         des_ctx.add_project(_proj);
     }
 
     for (uint32_t projects_size = 0; projects_size < 5; projects_size++) {
         for (uint32_t i = 0; i < 10; i++) {
-            DefaultAPI _task {"TEST_TASK", std::to_string(i).c_str(), projects_size, 0, 100, 0};
+            DefaultAPI _task{"TEST_TASK", std::to_string(i), projects_size, 0, 100, 0};
             des_ctx.add_task(_task);
         }
     }
