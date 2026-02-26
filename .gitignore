@@ -3,3 +3,5 @@ build_win
 .cache
 .vscode
 storage
+.clangd
+compile_commands.json
