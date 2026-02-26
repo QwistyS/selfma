@@ -57,7 +57,8 @@ int main() {
 
     QWISTYS_DEBUG_MSG("Hello Selfma");
 
-    selfma->register_callback(NotifyCode::EVENT_MAX_TIME_SLEEP, on_event);
+    selfma->register_callback(EventID::MAX_TIME_SLEEP, on_event);
+    // or equivalently by name: selfma->register_callback("EVENT_MAX_TIME_SLEEP", on_event);
 
     DefaultAPI proj = {
         .name = "Ramen",
@@ -101,7 +102,7 @@ int main() {
                     .project_id = 0xFFFFFFFF,
                     .task_id = 0,
                     .duration = 0,
-                    .notify = NotifyCode::EVENT_MAX_TIME_SLEEP,
+                    .notify = EventID::MAX_TIME_SLEEP,
                 };
 
                 time_to_sleep = DEFAULT_SLEEP_TIME;

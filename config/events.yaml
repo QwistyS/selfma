@@ -1,0 +1,7 @@
+events:
+  - id: 0
+    name: EVENT_MAX_TIME_SLEEP
+    description: "Event loop reached maximum sleep time"
+  - id: 1
+    name: TASK_TIME_ELAPSED
+    description: "Task timer completed"

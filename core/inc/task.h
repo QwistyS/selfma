@@ -36,11 +36,10 @@ struct DefaultAPI {
     DefaultAPI() = default;
 };
 
-enum NotifyCode {
-    EVENT_MAX_TIME_SLEEP = 0,
-    TASK_TIME_ELAPSED,
-    NOTIFY_TOTAL,
-};
+namespace EventID {
+    constexpr uint32_t MAX_TIME_SLEEP    = 0;
+    constexpr uint32_t TASK_TIME_ELAPSED = 1;
+}
 
 typedef void (*event_callback)(DefaultAPI*);
 /** Callbacks for avl tree for Project to task */

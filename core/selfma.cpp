@@ -127,10 +127,10 @@ bool Selfma::deserialize() {
 }
 
 void Selfma::notify(DefaultAPI& event) {
-    if (event.notify < NotifyCode::NOTIFY_TOTAL) {
-        return _callbacks[event.notify](&event);
+    auto it = _callbacks.find(event.notify);
+    if (it != _callbacks.end() && it->second) {
+        it->second(&event);
     }
-    return;
 }
 
 void Selfma::shutdown() {
@@ -142,7 +142,7 @@ void Selfma::update() {
 }
 
 void Selfma::on_update_on(void* p) {
-    selfma_update((selfma_ctx_t*)p, &_callbacks);
+    selfma_update((selfma_ctx_t*)p, static_cast<void*>(&_callbacks));
 }
 
 void Selfma::nop_stub(void* p) {
@@ -157,6 +157,15 @@ void Selfma::evntsystem_on() {
     _wrapper = &Selfma::on_update_on;
 }
 
-void Selfma::register_callback(NotifyCode notify_id, event_callback cb) {
+void Selfma::register_callback(uint32_t notify_id, event_callback cb) {
     _callbacks[notify_id] = std::move(cb);
+}
+
+void Selfma::register_callback(const std::string& name, event_callback cb) {
+    uint32_t id = _registry.id_for(name);
+    if (id == UINT32_MAX) {
+        QWISTYS_ERROR_MSG("register_callback: unknown event name '%s'", name.c_str());
+        return;
+    }
+    _callbacks[id] = std::move(cb);
 }

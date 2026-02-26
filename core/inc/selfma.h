@@ -1,6 +1,9 @@
 #ifndef SELFMA_SELFMA_H
 #define SELFMA_SELFMA_H
 
+#include <unordered_map>
+
+#include "event_registry.h"
 #include "task.h"
 #include "error_handler.h"
 #include "selfma_api.h"
@@ -9,6 +12,7 @@
 class Selfma final {
 public:
     Selfma(const std::string& file_name, char* buffer) : _error(_drp), _wrapper(&Selfma::nop_stub) {
+        _registry.load(std::string(STORAGE_PATH) + "/events.yaml");
         _ctx = selfma_create(0, file_name, buffer);
         if (!_ctx) {
             auto e = Error(ErrorCode::MEMORY_ERROR, "Fail to create context", Severity::CRITICAL);
@@ -29,7 +33,8 @@ public:
     bool remove_project(DefaultAPI& args);
     bool remove_task(DefaultAPI& args);
     std::vector<DefaultAPI> projects_to_vec();
-    void register_callback(NotifyCode notify_id, event_callback cb);
+    void register_callback(uint32_t notify_id, event_callback cb);
+    void register_callback(const std::string& name, event_callback cb);
     bool serialize();
     bool deserialize();
     void notify(DefaultAPI& event);
@@ -43,7 +48,8 @@ private:
     ErrorHandler _error;
     DisasterRecoveryPlan _drp;
     
-    std::array<event_callback, NotifyCode::NOTIFY_TOTAL> _callbacks;
+    std::unordered_map<uint32_t, event_callback> _callbacks;
+    EventRegistry _registry;
     void _setup_drp();
     bool _handle_mem();
     bool _handle_add_project();

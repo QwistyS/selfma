@@ -45,10 +45,15 @@ set(XTRN extern)
 
 add_subdirectory(${XTRN}/Unity)
 add_subdirectory(${XTRN}/stuff)  # Add qwistys_lib as a subdirectory
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+add_subdirectory(${XTRN}/yaml-cpp)
 
 # Include directories for core module headers
 include_directories(core/inc)
 include_directories(${XTRN}/stuff/inc)
+include_directories(${XTRN}/yaml-cpp/include)
 
 file(GLOB SELFMA_SOURCES
   core/project.cpp
@@ -56,6 +61,7 @@ file(GLOB SELFMA_SOURCES
   core/selfma_api.cpp
   core/selfma_file.cpp
   core/selfma.cpp
+  core/event_registry.cpp
 )
 
 # Create selfma as a static library
@@ -64,6 +70,19 @@ add_library(${PROJECT_NAME} STATIC ${SELFMA_SOURCES})
 # Use PRIVATE linkage for qwistys_lib
 target_link_libraries(${PROJECT_NAME} PRIVATE
     qwistys_lib
+    yaml-cpp
+)
+
+# Copy default events.yaml to STORAGE_PATH at build time (only if absent)
+set(EVENTS_YAML_SRC "${CMAKE_CURRENT_SOURCE_DIR}/config/events.yaml")
+set(EVENTS_YAML_DST "${STORAGE_FOLDER_PATH}/events.yaml")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${STORAGE_FOLDER_PATH}"
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC=${EVENTS_YAML_SRC}
+        -DDST=${EVENTS_YAML_DST}
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_if_absent.cmake"
+    COMMENT "Ensuring events.yaml exists in storage"
 )
 
 # ── Optional Tracy profiler support ──────────────────────────────────────────
@@ -136,7 +155,7 @@ add_custom_target(run_all_tests
 )
 
 # Install rules
-install(TARGETS ${PROJECT_NAME} qwistys_lib
+install(TARGETS ${PROJECT_NAME} qwistys_lib yaml-cpp
         EXPORT ${PROJECT_NAME}Targets
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <unordered_map>
 
 #include "error_handler.h"
 #include "project.h"
@@ -13,10 +14,10 @@ static void task_on_tree(void* t, void* e) {
     if (task->update()) {
         task->timer.set(1);
         DefaultAPI event = {};
-        auto callbacks = (std::array<event_callback, NotifyCode::NOTIFY_TOTAL>*) e;
-        auto cb = (*callbacks)[NotifyCode::TASK_TIME_ELAPSED];
-        if (cb) {
-            cb(&event);
+        auto* cbs = static_cast<std::unordered_map<uint32_t, event_callback>*>(e);
+        auto it = cbs->find(EventID::TASK_TIME_ELAPSED);
+        if (it != cbs->end() && it->second) {
+            it->second(&event);
         }
     }
 }
