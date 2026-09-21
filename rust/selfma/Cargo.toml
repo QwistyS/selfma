@@ -1,0 +1,18 @@
+[package]
+name = "selfma"
+version.workspace = true
+edition.workspace = true
+description = "Scalable task management system library backed by SQLite"
+license = "MIT"
+
+[lints]
+workspace = true
+
+[dependencies]
+rusqlite.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

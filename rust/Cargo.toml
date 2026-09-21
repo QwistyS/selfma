@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["selfma"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+
+[workspace.dependencies]
+rusqlite = { version = "0.32", features = ["bundled"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+tempfile = "3"
