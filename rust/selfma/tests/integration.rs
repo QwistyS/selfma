@@ -142,3 +142,63 @@ fn deserializes_into_fresh_context_only_on_request() {
     fresh.deserialize().unwrap();
     assert_eq!(fresh.list_projects().len(), 1);
 }
+
+#[test]
+fn keyed_tasks_are_upserted_completed_and_survive_a_reload() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("keyed.db");
+    {
+        let mut ctx = selfma::SelfmaContext::new(&path).unwrap();
+        ctx.deserialize().unwrap();
+        let project = ctx.add_project("Launjera", "business").unwrap();
+        let (first, created) = ctx
+            .upsert_task_by_key(project, "pulse:unpaid", "Collect 19", 0.0)
+            .unwrap();
+        assert!(created);
+        let (again, created) = ctx
+            .upsert_task_by_key(project, "pulse:unpaid", "Collect 17", 0.0)
+            .unwrap();
+        assert_eq!((first, created), (again, false));
+        assert_eq!(ctx.get_task(first).unwrap().description, "Collect 17");
+        // A keyed task with an elapsed timer is not expired by update().
+        ctx.update().unwrap();
+        assert!(ctx.get_task(first).is_some());
+        ctx.complete_task(first).unwrap();
+        ctx.serialize().unwrap();
+    }
+    let mut ctx = selfma::SelfmaContext::new(&path).unwrap();
+    ctx.deserialize().unwrap();
+    let task = ctx.task_by_key("pulse:unpaid").unwrap();
+    assert!(task.is_done());
+    assert_eq!(task.description, "Collect 17");
+    // Re-sending a done task's key updates its text but keeps it done.
+    let project = ctx.project_by_name("Launjera").unwrap().id;
+    let (id, created) = ctx
+        .upsert_task_by_key(project, "pulse:unpaid", "Collect 15", 0.0)
+        .unwrap();
+    assert!(!created);
+    assert!(ctx.get_task(id).unwrap().is_done());
+}
+
+#[test]
+fn a_version_one_database_gains_keys_and_done_markers() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("v1.db");
+    {
+        let conn = rusqlite::Connection::open(&path).unwrap();
+        conn.execute_batch(
+            "CREATE TABLE schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+             CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, created_at INTEGER NOT NULL);
+             CREATE TABLE tasks (id INTEGER PRIMARY KEY, project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                 description TEXT NOT NULL, duration_sec REAL NOT NULL, created_at INTEGER NOT NULL);
+             INSERT INTO projects VALUES (1, 'old', 'v1', 0);
+             INSERT INTO tasks VALUES (1, 1, 'old task', 60, 0);",
+        )
+        .unwrap();
+    }
+    let mut ctx = selfma::SelfmaContext::new(&path).unwrap();
+    ctx.deserialize().unwrap();
+    let task = ctx.get_task(selfma::TaskId(1)).unwrap();
+    assert_eq!((task.key.as_deref(), task.is_done()), (None, false));
+    ctx.complete_task(selfma::TaskId(1)).unwrap();
+}

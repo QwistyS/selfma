@@ -64,9 +64,20 @@ pub struct Task {
     pub duration_sec: f64,
     pub created_at: DateTime<Utc>,
     pub timer: Timer,
+    /// Caller-chosen identity, unique across all tasks: lets an outside system (e.g. a daily
+    /// report) re-send the same task without creating duplicates. `None` for ordinary tasks.
+    #[serde(default)]
+    pub key: Option<String>,
+    /// When the task was marked done; `None` while open. Done tasks are kept, not deleted.
+    #[serde(default)]
+    pub done_at: Option<DateTime<Utc>>,
 }
 
 impl Task {
+    pub fn is_done(&self) -> bool {
+        self.done_at.is_some()
+    }
+
     pub fn elapsed(&self) -> bool {
         self.timer.is_finished()
     }
@@ -107,6 +118,10 @@ pub enum SelfmaError {
     TaskNotFound(TaskId),
     #[error("name must not be empty")]
     EmptyName,
+    #[error("task key not found: {0}")]
+    TaskKeyNotFound(String),
+    #[error("project name not found: {0}")]
+    ProjectNameNotFound(String),
     #[error("description must not be empty")]
     EmptyDescription,
     #[error("duration must be finite and non-negative")]

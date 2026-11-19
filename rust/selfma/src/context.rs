@@ -72,6 +72,16 @@ impl SelfmaContext {
         description: &str,
         duration_sec: f64,
     ) -> Result<TaskId> {
+        self.insert_task(project_id, description, duration_sec, None)
+    }
+
+    fn insert_task(
+        &mut self,
+        project_id: ProjectId,
+        description: &str,
+        duration_sec: f64,
+        key: Option<&str>,
+    ) -> Result<TaskId> {
         if !self.projects.contains_key(&project_id) {
             return Err(SelfmaError::ProjectNotFound(project_id));
         }
@@ -85,8 +95,13 @@ impl SelfmaContext {
             duration_sec,
             created_at: Utc::now(),
             timer: Timer::new(duration_sec),
+            key: key.map(str::to_string),
+            done_at: None,
         };
-        self.store.insert_task(&task)?;
+        if let Err(error) = self.store.insert_task(&task) {
+            self.task_ids.release(id.0);
+            return Err(error);
+        }
         self.tasks.insert(id, task);
         Ok(id)
     }
@@ -103,6 +118,61 @@ impl SelfmaContext {
         self.tasks.remove(&task_id);
         self.task_ids.release(task_id.0);
         Ok(())
+    }
+
+    /// Adds a task identified by `key`, or updates the description of the task that already has
+    /// it. A done task stays done. Returns the task id and whether it was newly created.
+    pub fn upsert_task_by_key(
+        &mut self,
+        project_id: ProjectId,
+        key: &str,
+        description: &str,
+        duration_sec: f64,
+    ) -> Result<(TaskId, bool)> {
+        validate_description(description)?;
+        if let Some(id) = self.task_by_key(key).map(|task| task.id) {
+            self.store.update_task_description(id, description)?;
+            if let Some(task) = self.tasks.get_mut(&id) {
+                task.description = description.to_string();
+            }
+            return Ok((id, false));
+        }
+        let id = self.insert_task(project_id, description, duration_sec, Some(key))?;
+        Ok((id, true))
+    }
+
+    /// Marks a task done (kept, not deleted). Marking a done task again changes nothing.
+    pub fn complete_task(&mut self, task_id: TaskId) -> Result<()> {
+        let task = self
+            .tasks
+            .get_mut(&task_id)
+            .ok_or(SelfmaError::TaskNotFound(task_id))?;
+        if task.done_at.is_none() {
+            let now = Utc::now();
+            self.store.set_task_done(task_id, now.timestamp())?;
+            task.done_at = Some(now);
+        }
+        Ok(())
+    }
+
+    pub fn task_by_key(&self, key: &str) -> Option<&Task> {
+        self.tasks
+            .values()
+            .find(|task| task.key.as_deref() == Some(key))
+    }
+
+    pub fn project_by_name(&self, name: &str) -> Option<&Project> {
+        self.projects.values().find(|project| project.name == name)
+    }
+
+    pub fn get_project_name(&self, project_id: ProjectId) -> Option<&str> {
+        self.projects
+            .get(&project_id)
+            .map(|project| project.name.as_str())
+    }
+
+    pub fn list_tasks(&self) -> Vec<&Task> {
+        self.tasks.values().collect()
     }
 
     pub fn get_project(&self, project_id: ProjectId) -> Option<ProjectSnapshot> {
@@ -162,7 +232,8 @@ impl SelfmaContext {
         let finished: Vec<TaskId> = self
             .tasks
             .iter()
-            .filter(|(_, task)| task.elapsed())
+            // Done tasks are history and keyed tasks belong to the system that keys them.
+            .filter(|(_, task)| task.elapsed() && task.done_at.is_none() && task.key.is_none())
             .map(|(id, _)| *id)
             .collect();
         for task_id in finished {

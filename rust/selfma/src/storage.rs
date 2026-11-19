@@ -29,6 +29,9 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
 "#;
 
+/// v2: tasks get an optional unique `key` and a `done_at` (seconds since 1970, NULL while open).
+const SCHEMA_VERSION: &str = "2";
+
 pub struct Store {
     conn: Connection,
 }
@@ -39,8 +42,26 @@ impl Store {
         conn.pragma_update(None, "foreign_keys", true)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.execute_batch(SCHEMA_V1)?;
+        Self::migrate_v2(&conn)?;
         Self::write_schema_version(&conn)?;
         Ok(Self { conn })
+    }
+
+    fn migrate_v2(conn: &Connection) -> Result<()> {
+        let mut stmt = conn.prepare("SELECT name FROM pragma_table_info('tasks')")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get(0))?
+            .collect::<std::result::Result<_, _>>()?;
+        if !columns.iter().any(|c| c == "key") {
+            conn.execute_batch("ALTER TABLE tasks ADD COLUMN key TEXT")?;
+        }
+        if !columns.iter().any(|c| c == "done_at") {
+            conn.execute_batch("ALTER TABLE tasks ADD COLUMN done_at INTEGER")?;
+        }
+        conn.execute_batch(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_tasks_key ON tasks(key) WHERE key IS NOT NULL",
+        )?;
+        Ok(())
     }
 
     #[cfg(test)]
@@ -48,15 +69,16 @@ impl Store {
         conn.pragma_update(None, "foreign_keys", true)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.execute_batch(SCHEMA_V1)?;
+        Self::migrate_v2(&conn)?;
         Self::write_schema_version(&conn)?;
         Ok(Self { conn })
     }
 
     fn write_schema_version(conn: &Connection) -> Result<()> {
         conn.execute(
-            r#"INSERT INTO schema_meta (key, value) VALUES ('version', '1')
+            r#"INSERT INTO schema_meta (key, value) VALUES ('version', ?1)
                ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
-            [],
+            [SCHEMA_VERSION],
         )?;
         Ok(())
     }
@@ -77,15 +99,33 @@ impl Store {
 
     pub fn insert_task(&self, task: &Task) -> Result<()> {
         self.conn.execute(
-            r#"INSERT INTO tasks (id, project_id, description, duration_sec, created_at)
-                   VALUES (?1, ?2, ?3, ?4, ?5)"#,
+            r#"INSERT INTO tasks (id, project_id, description, duration_sec, created_at, key, done_at)
+                   VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"#,
             rusqlite::params![
                 task.id.0,
                 task.project_id.0,
                 task.description,
                 task.duration_sec,
-                task.created_at.timestamp()
+                task.created_at.timestamp(),
+                task.key,
+                task.done_at.map(|at| at.timestamp())
             ],
+        )?;
+        Ok(())
+    }
+
+    pub fn update_task_description(&self, task_id: TaskId, description: &str) -> Result<()> {
+        self.conn.execute(
+            "UPDATE tasks SET description = ?2 WHERE id = ?1",
+            rusqlite::params![task_id.0, description],
+        )?;
+        Ok(())
+    }
+
+    pub fn set_task_done(&self, task_id: TaskId, done_at: i64) -> Result<()> {
+        self.conn.execute(
+            "UPDATE tasks SET done_at = ?2 WHERE id = ?1",
+            rusqlite::params![task_id.0, done_at],
         )?;
         Ok(())
     }
@@ -115,7 +155,7 @@ impl Store {
 
     pub fn load_tasks(&self) -> Result<Vec<Task>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, project_id, description, duration_sec, created_at FROM tasks ORDER BY id",
+            "SELECT id, project_id, description, duration_sec, created_at, key, done_at FROM tasks ORDER BY id",
         )?;
         let rows = stmt.query_map([], row_to_task)?;
         Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
@@ -156,6 +196,10 @@ fn row_to_task(row: &rusqlite::Row<'_>) -> rusqlite::Result<Task> {
         created_at: DateTime::from_timestamp(row.get(4)?, 0)
             .unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap()),
         timer: Timer::new(row.get(3)?),
+        key: row.get(5)?,
+        done_at: row
+            .get::<_, Option<i64>>(6)?
+            .and_then(|at| DateTime::from_timestamp(at, 0)),
     })
 }
 
@@ -187,6 +231,8 @@ mod tests {
             duration_sec: 30.0,
             created_at: Utc::now(),
             timer: Timer::new(30.0),
+            key: None,
+            done_at: None,
         }
     }
 

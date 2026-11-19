@@ -67,3 +67,12 @@ selfma_api.h (C API, opaque selfma_ctx_t)
 - Use `qwistys_macros.h` logging macros (`LOG_INFO`, `LOG_ERR`, etc.) rather than raw `printf`/`std::cout`.
 - Struct packing for serializable types uses `GNU_PACKED_ATTRIBUTE` / `MSVC_PRAGMA_PACK` macros (cross-platform support including Windows via `clang-windows.cmake`).
 - IDs are `uint32_t`; always acquire via `IdsPool::next()` and release via `IdsPool::release()` on removal.
+
+## Rust crate and CLI (`rust/`)
+
+`rust/selfma` is the SQLite-backed Rust version of the library; `rust/selfma-cli` builds the `selfma` command (`cargo install --path rust/selfma-cli --root ~/.local`). The database is `$SELFMA_DB` or `~/.local/share/selfma/selfma.db`.
+
+- Tasks have an optional unique `key` and a `done_at` (schema v2, migrated in place from v1). Done tasks are kept. Keyed and done tasks are never expired by `update()`.
+- `selfma add --project NAME [--key KEY] TEXT`, `list [--project NAME] [--open] [--json]`, `done ID|--key KEY`.
+- `selfma sync --project NAME --prefix PREFIX < [{"key","text"}]`: another system (Pulse, `~/src/pulse`) sends its full current task list; new keys are added, known keys get the new text, and open tasks with that prefix that are missing are marked done.
+- Checks: `cd rust && cargo fmt && cargo clippy --all-targets && cargo test`.

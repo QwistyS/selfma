@@ -1,0 +1,22 @@
+[package]
+name = "selfma-cli"
+version.workspace = true
+edition.workspace = true
+description = "Command line for Selfma tasks: add, list, done, and sync from another system"
+license = "MIT"
+
+[[bin]]
+name = "selfma"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+selfma = { path = "../selfma" }
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
